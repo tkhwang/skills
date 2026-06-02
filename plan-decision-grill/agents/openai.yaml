@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Decision Grill"
+  short_description: "Grill plan decisions before coding"
+  default_prompt: "Use $plan-decision-grill to review this plan before implementation and ask only the next high-impact unresolved decision question, including new file/folder path choices."

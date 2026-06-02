@@ -1,0 +1,4 @@
+interface:
+  display_name: "Plan Execute"
+  short_description: "Execute an approved plan step by step (auto / checkpoint)"
+  default_prompt: "Use $plan-execute to implement the approved plan. First confirm its decision gates are resolved, then run its steps in checkpoint mode (stop and report build/test evidence after each major step) unless I ask for auto. Report to me in Korean."

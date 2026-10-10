@@ -1,14 +1,24 @@
 ---
 name: tk-verify
-description: "Stage [3] of the tk workflow: run the repo's typecheck, lint (warnings fail), format check and tests, plus the plan's behaviour checks, and record results per R-id in plan.md. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[fix]"
+description: "Stage [3] of the tk workflow: run the repo's typecheck, lint (warnings fail), format check and tests, plus the plan's behaviour checks, and record results per R-id in plan.md. With phase or slice it is the checkpoint tk-implement calls mid-build: the same commands, scoped to what was just built, recorded in todo.md. Use when the user runs it or tk-workflow routes to it."
+argument-hint: "[phase | slice | fix]"
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # tk-verify
 
-Measure, then report. Commands come from the repo, warnings count as failures, and results land in `plan.md` under `## Verification` so `tk-signoff` can read them.
+Measure, then report; never fix code. Commands come from the repo and warnings count as failures. Without a scope argument this is the stage: every package, the full suite, results in `plan.md` under `## Verification` for `tk-signoff`. With `phase` or `slice` it is the checkpoint `tk-implement` calls mid-build: the same commands, scoped to what was just built, one line in `todo.md`.
+
+## Scope
+
+| Argument | Runs | Records | Called by |
+|---|---|---|---|
+| `phase` | typecheck and lint of the packages the last `###` sub-phase touched, plus that sub-phase's `verify:` commands | `checkpoint: <cmd> ✓ · <cmd> ✗ · YYYY-MM-DD HH:MM` under that `###` heading in `todo.md` | `tk-implement` at every sub-phase boundary |
+| `slice` | as `phase` over the whole `##` slice, plus the plan's behaviour checks for the R-ids that slice covers, where they can run without a human | the same line under the `##` heading | `tk-implement` in `slice` / `all` at a slice boundary |
+| (none) | everything below, all packages | `plan.md` `## Verification` | the human or the driver after the last task |
+
+A scoped run never touches `plan.md` and never changes the `stale:` flag. On a failure it reports the raw output and returns; fixing is `tk-implement`'s job.
 
 ## Config
 
@@ -16,7 +26,7 @@ Read `docs/agents/tk-workflow.md` first (Verify table per package). If missing, 
 
 ## 1. Preconditions
 
-Every box in `docs/tasks/todo.md` is checked. Otherwise list the unchecked tasks and point at `tk-implement`.
+Full scope: every box in `docs/tasks/todo.md` is checked; otherwise list the unchecked tasks and point at `tk-implement`. `phase` / `slice`: every box of that sub-phase or slice is checked.
 
 ## 2. Discover commands
 
@@ -26,7 +36,7 @@ Done when every package in scope has a command for typecheck, lint, format, test
 
 ## 3. Run
 
-Per package in scope, in this order, reading every output:
+Per package in scope (full: all packages; `phase` / `slice`: the packages whose files the tasks list), in this order, reading every output. A scoped run does steps 1, 2 and the tasks' `verify:` commands; `slice` adds the runnable part of step 5 for its R-ids; format and the full suite are full-scope only.
 
 1. typecheck (zero errors, zero warnings)
 2. lint (zero warnings)
@@ -34,11 +44,11 @@ Per package in scope, in this order, reading every output:
 4. full test suite, once
 5. behaviour checks from the plan's Verification plan: run what can be run (CLI, HTTP, scripts); list for the human what needs a browser or a device, with exact steps and the R-id each proves.
 
-With the `fix` argument: run the formatter's write mode and the linter's `--fix` first, then run the full sequence. Type errors and failing tests are never auto-fixed here.
+With the `fix` argument (full scope only; `phase fix` and `slice fix` are rejected with a one-line reason, since scoped runs never change code): run the formatter's write mode and the linter's `--fix` first, then run the full sequence. Type errors and failing tests are never auto-fixed here.
 
 ## 4. Record
 
-Append or replace `## Verification` in `plan.md`:
+Scoped run: write the `checkpoint:` line in `todo.md` and stop here. Full run: append or replace `## Verification` in `plan.md`:
 
 ```markdown
 ## Verification
@@ -74,3 +84,4 @@ Keep the raw output of any failing command in a fenced block under the table.
 - [ ] Warnings reported as failures.
 - [ ] Results recorded in `plan.md`, not only in chat.
 - [ ] No code edited beyond formatter and linter autofix under `fix`.
+- [ ] A `phase` / `slice` run wrote only a `checkpoint:` line in `todo.md`, nothing in `plan.md`.

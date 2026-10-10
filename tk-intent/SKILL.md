@@ -3,7 +3,7 @@ name: tk-intent
 description: "Stage [0] of the tk workflow: strengthen a human-written intent document (why, what, non-goals, success criteria, R-id requirements) through a focused interview, or scaffold an empty one. Use when the user runs it or tk-workflow routes to it."
 argument-hint: "[<MODULE> <title> | <path or MODULE###-slug>]"
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # tk-intent
@@ -24,7 +24,7 @@ Read `docs/agents/tk-workflow.md` first (intents path, module codes, languages).
 
 ## 1. Locate or scaffold
 
-- Argument is a path or `MODULE###-slug` → open that file.
+- Argument is a path, `MODULE###-slug`, or a bare `MODULE###` that matches exactly one file → open that file.
 - Argument is `<MODULE> <title>` and no matching file exists → write the template below with the frontmatter filled and every section empty, print the path, and **end the turn**. The human fills it in.
 - Pasted draft in chat → save it to the computed filename first, then continue.
 - No argument → the single intent without `## Outcome` not referenced by any plan; several → ask which.
@@ -52,7 +52,7 @@ Done when every requirement has an R-id and an acceptance criterion, and the doc
 
 ## 5. Stop
 
-Print a five-line summary (goal, R-id count, non-goals, open questions, path) and the next command (`/tk-plan` or `다음`). End the turn.
+Print a five-line summary (goal, R-id count, non-goals, open questions, path) and the next command (`/tk-plan` or `다음`; `리뷰` to have peers read it first). End the turn.
 
 ## Template
 

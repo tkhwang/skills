@@ -1,18 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="580" viewBox="0 0 1200 580" role="img" aria-labelledby="title desc">
   <title id="title">tk workflow: intent, plan, implement, verify, signoff</title>
   <desc id="desc">Five stages run left to right. Each stage reads a document and writes a document, and the human approves before the next stage. Intents are permanent, tasks are per piece of work and emptied at signoff, specs describe current behaviour.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#5b8def"/>
     </marker>
+    <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8a8f98"/>
+    </marker>
   </defs>
 
-  <rect width="1200" height="440" rx="24" fill="#0f1115"/>
+  <rect width="1200" height="580" rx="24" fill="#0f1115"/>
 
   <!-- header -->
   <g id="header" transform="translate(56 44)">
     <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif" font-size="22" font-weight="600" fill="#8a8f98" letter-spacing="2">TK WORKFLOW</text>
-    <text x="0" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif" font-size="34" font-weight="700" fill="#f3f4f6">One agent. Five stages. Files are the state.</text>
+    <text x="0" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif" font-size="34" font-weight="700" fill="#f3f4f6">Five stages. Files are the state. Multi-agent review and debate.</text>
   </g>
 
   <!-- stage cards -->
@@ -97,5 +100,31 @@
     </g>
   </g>
 
-  <text x="56" y="414" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif" font-size="18" fill="#8a8f98">tk-grill resolves open decisions one at a time · tk-setup configures the repo once · the agent never commits</text>
+  <!-- peers: multi-agent review and debate -->
+  <g id="peers" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif">
+    <g stroke="#8a8f98" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#arrow-dim)">
+      <path d="M154,418 L154,386"/>
+      <path d="M600,418 L600,386"/>
+    </g>
+    <g transform="translate(56 418)">
+      <rect width="1088" height="92" rx="12" fill="#121722" stroke="#2a2f3a" stroke-dasharray="6 4"/>
+      <text x="16" y="30" font-size="17" fill="#8a8f98">optional · tk-multi-review reads the artifact at any gate · tk-multi-debate argues an open decision</text>
+      <g transform="translate(16 44)">
+        <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
+        <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">claude</text>
+      </g>
+      <g transform="translate(124 44)">
+        <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
+        <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">codex</text>
+      </g>
+      <g transform="translate(232 44)">
+        <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
+        <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">grok</text>
+      </g>
+      <text x="360" y="58" font-size="17" fill="#b4b9c3">read-only · headless · one process each · the human still decides</text>
+      <text x="360" y="82" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#e5e7eb">docs/tasks/reviews/ · docs/tasks/debates/</text>
+    </g>
+  </g>
+
+  <text x="56" y="558" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif" font-size="18" fill="#8a8f98">tk-grill resolves open decisions one at a time · tk-setup configures the repo once · the agent never commits</text>
 </svg>

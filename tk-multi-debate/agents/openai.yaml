@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Multi Debate"
+  short_description: "Peer agents argue one open decision in written rounds; the human decides"
+  default_prompt: "Use $tk-multi-debate on an open decision: have the configured peer agents argue it read-only in two written rounds, synthesize the positions with evidence, and ask me the decision as a tk-grill question."

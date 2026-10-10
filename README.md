@@ -23,7 +23,7 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 |-------|-------|--------------|
 | [`tk-setup`](tk-setup/) | once per repo | Explores the repo and writes `docs/agents/tk-workflow.md`: layout, docs paths, module codes, verify commands, peers. |
 | [`tk-workflow`](tk-workflow/) | hub | Derives the current stage from the files, routes to the next skill, and drives the flow with `next` / `revise:` / `auto …` / `review` / `debate`. |
-| [`tk-intent`](tk-intent/) | [0] | You write the intent draft (`AGENT001-slug.md`); it reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, … |
+| [`tk-intent`](tk-intent/) | [0] | `/tk-intent AGENT "title"` scaffolds `AGENT001-slug.md` from a guided template; you write the draft; `/tk-intent AGENT001` reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, … |
 | [`tk-plan`](tk-plan/) | [1] | Turns the intent into `docs/tasks/plan.md` + `todo.md`: vertical slices, each Backend → Frontend, with an R-id coverage matrix and no open decisions. |
 | [`tk-implement`](tk-implement/) | [2] | Works `todo.md` in order, checking boxes with evidence. Every Backend / Frontend sub-phase ends with a `tk-verify phase` checkpoint that it fixes itself. Stops after each sub-phase (`auto`, the default), after each slice (`slice`), or at the end (`all`). |
 | [`tk-verify`](tk-verify/) | [3] | Runs the repo's typecheck, lint (warnings fail), format check, tests, and the plan's behaviour checks; records results per R-id in `plan.md`. With `phase` / `slice` it is the mid-build checkpoint: same commands, scoped to what was just built, one line in `todo.md`. |
@@ -48,7 +48,8 @@ Other agents join as read-only peers. The orchestrator stays the one agent that 
 
 ```text
 /tk-setup                       once per repo
-(you write docs/intents/AGENT001-tenant-export.md)
+/tk-intent AGENT Tenant export  scaffold docs/intents/AGENT001-tenant-export.md (Korean template; append `en` for English)
+(you fill in the draft)
 /tk-intent AGENT001             interview → requirements R1…Rn
 next                            → /tk-plan: slices, decisions, coverage
 review                          → codex and grok read plan.md; findings patched or asked
@@ -91,7 +92,7 @@ npx skills add tkhwang/skills -s tk-setup,tk-workflow,tk-intent,tk-grill,tk-plan
 npx skills update
 ```
 
-Then, in a project: run `/tk-setup`, write your first intent, and run `/tk-intent`.
+Then, in a project: run `/tk-setup`, scaffold your first intent with `/tk-intent <MODULE> <title>`, fill it in, and run `/tk-intent <ID>`.
 
 `tk-grill` works on its own. If [`mattpocock/skills`](https://github.com/mattpocock/skills) is installed, it follows that repo's `grilling` discipline for question ordering.
 

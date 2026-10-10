@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Plan"
+  short_description: "Plan an intent as vertical slices with R-id coverage"
+  default_prompt: "Use $tk-plan on the current intent: read the specs and code, draft vertical slices (Backend then Frontend), resolve the important decisions with me one at a time, and write docs/tasks/plan.md and todo.md."

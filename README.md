@@ -1,60 +1,94 @@
 # skills
 
-tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/skills).
+tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/skills) for Claude Code, Codex, and other skill-aware agents. The main piece is **tk workflow**: a staged, document-driven way to take one change from intent to signoff with a single agent.
 
-Each top-level folder is one skill (`<name>/SKILL.md`), usable by Claude Code, Codex, and other skill-aware agents.
+**English** | [한글](README.ko.md)
+
+<p align="center">
+  <img src="./assets/readme/tk-workflow.svg" width="100%" alt="tk workflow: five stages (intent, plan, implement, verify, signoff) run left to right with a human approval gate between each; intents are permanent, tasks are per piece of work, specs describe current behaviour">
+</p>
+
+## What it is
+
+- **Files are the state.** Each stage reads a document and writes a document. Where work stands is derived from `docs/`, never from conversation memory, so any session can pick it up.
+- **A human gate at every stage.** A stage saves its artifact, prints a summary, and ends the turn. The next stage starts only on an explicit "next".
+- **The agent never commits.** It reads git, it does not write it. Commits, pushes, and branches are yours.
 
 ## Skills
 
-| Skill | Description |
-|-------|-------------|
-| [`plan-decision-grill`](plan-decision-grill/) | Stress-test a plan/design/PRD before coding by surfacing only the important decision gates. |
-| [`plan-execute`](plan-execute/) | Execute an approved plan step by step in `auto` or `checkpoint` mode, verifying build/type/lint/test results at each step. |
+| Skill | Stage | What it does |
+|-------|-------|--------------|
+| [`tk-setup`](tk-setup/) | once per repo | Explores the repo and writes `docs/agents/tk-workflow.md`: layout, docs paths, module codes, verify commands. |
+| [`tk-workflow`](tk-workflow/) | hub | Derives the current stage from the files, routes to the next skill, and drives the flow with `next` / `revise:` / `auto`. |
+| [`tk-intent`](tk-intent/) | [0] | You write the intent draft (`AGENT001-slug.md`); it reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, … |
+| [`tk-plan`](tk-plan/) | [1] | Turns the intent into `docs/tasks/plan.md` + `todo.md`: vertical slices, each Backend → Frontend, with an R-id coverage matrix and no open decisions. |
+| [`tk-implement`](tk-implement/) | [2] | Works `todo.md` in order. Stops after every Backend / Frontend sub-phase (or runs to the end with `auto`), checking boxes with evidence. |
+| [`tk-verify`](tk-verify/) | [3] | Runs the repo's typecheck, lint (warnings fail), format check, tests, and the plan's behaviour checks; records results per R-id in `plan.md`. |
+| [`tk-signoff`](tk-signoff/) | [4] | Traces every R-id through plan, diff, and verification. Go / No-Go. On Go: appends the intent Outcome, updates module specs, empties `docs/tasks/`. |
+| [`tk-grill`](tk-grill/) | helper | Asks the unresolved decisions one at a time, with a recommendation, and patches answers into the document. Used by `tk-intent` and `tk-plan`. |
 
-`plan-decision-grill` works standalone. Optionally, installing [`mattpocock/skills`](https://github.com/mattpocock/skills) gives it `grill-me` and `grill-with-docs` to lean on for a sharper one-question-at-a-time interrogation:
+## How one change flows
 
-```bash
-npx skills add mattpocock/skills -s grill-me,grill-with-docs -g
+```text
+/tk-setup                       once per repo
+(you write docs/intents/AGENT001-tenant-export.md)
+/tk-intent AGENT001             interview → requirements R1…Rn
+next                            → /tk-plan: slices, decisions, coverage
+next                            → /tk-implement: Slice 1 Backend … stop
+next                            → Slice 1 Frontend … stop … (or `auto`)
+next                            → /tk-verify: tsc · eslint · prettier · tests
+next                            → /tk-signoff: Go → specs updated, tasks emptied
+git commit                      yours
 ```
+
+After the first `/tk-workflow` or stage command in a session, the plain words `next`, `revise: …`, `auto`, `status`, and `stop` keep the flow moving. Hedged answers ("looks fine") are not approval; the driver asks again.
+
+## Documents
+
+| Path | Lifetime | Holds |
+|------|----------|-------|
+| `docs/intents/<MODULE><NNN>-<slug>.md` | permanent, one per change | why, what, non-goals, success criteria, `R`-numbered requirements, decision log, outcome |
+| `docs/tasks/plan.md` | current work only | decisions, scope, slices, verification plan, R-id coverage, verification results |
+| `docs/tasks/todo.md` | current work only | `## Slice N` → `### Backend` / `### Frontend` → checkbox tasks with evidence |
+| `docs/specs/<module>/` | permanent | how each module behaves now, written in timeless language |
+| `docs/agents/tk-workflow.md` | per repo | the configuration `tk-setup` writes |
+
+`plan.md` and `todo.md` are overwritten per piece of work and emptied at signoff; git history is the archive. Repos that already lay docs out differently keep their layout through `tk-setup`.
 
 ## Install
 
-Use the [`skills`](https://github.com/vercel-labs/skills) CLI:
-
 ```bash
-# all skills, global (user-level), all agents
+# all skills, user-level, every supported agent
 npx skills add tkhwang/skills -g
 
-# a specific skill only
-npx skills add tkhwang/skills -s plan-decision-grill -g
+# just the tk workflow
+npx skills add tkhwang/skills -s tk-setup,tk-workflow,tk-intent,tk-grill,tk-plan,tk-implement,tk-verify,tk-signoff -g
 
-# later, pull the latest version
+# later
 npx skills update
 ```
 
-This symlinks the skills into your agent dirs (`~/.claude/skills`, `~/.codex/skills`, …) and records them in `.skill-lock.json`. Pass `--copy` if you want copies instead of symlinks.
+Then, in a project: run `/tk-setup`, write your first intent, and run `/tk-intent`.
+
+`tk-grill` works on its own. If [`mattpocock/skills`](https://github.com/mattpocock/skills) is installed, it follows that repo's `grilling` discipline for question ordering.
+
+## Standalone
+
+| Skill | Description |
+|-------|-------------|
+| [`plan-decision-grill`](plan-decision-grill/) | Stress-test a plan, design, or PRD before coding by surfacing only the important decision gates. `tk-grill` covers the same ground inside the workflow. |
 
 ## Develop
 
-On the machine where you author these skills, **don't** use `npx skills add` — it copies the files, decoupling them from this working tree (edits no longer flow to git). Instead clone and run [`link.sh`](link.sh):
-
-
-`link.sh` symlinks every skill here into the shared hub (`~/.agents/skills/<name>`) and into each agent dir (`~/.claude/skills`, `~/.codex/skills`). Edits to a skill are then live immediately, and `git push` publishes them. Re-run `./link.sh` any time after adding a new skill folder (it's idempotent).
-
-It creates this symlink chain (arrows = "points at"):
-
-```
-~/.claude/skills/<name>  ──┐
-                           ├──→  ~/.agents/skills/<name>  ──→  <repo>/<name>
-~/.codex/skills/<name>   ──┘         (hub)                      (real, git working tree)
-```
-
-Per-agent dirs point at the hub (relative), and the hub points at this repo (absolute). `link.sh` creates all three links.
-
-Pass skill names to link only those:
+Clone this repo and run [`link.sh`](link.sh) instead of `npx skills add`, so edits flow straight to git:
 
 ```bash
-./link.sh                 # all skills (default)
-./link.sh plan-execute    # just one
+./link.sh                 # link every skill
+./link.sh tk-plan         # link one
 ```
 
+It creates `~/.agents/skills/<name>` → this repo, and `~/.claude/skills/<name>`, `~/.codex/skills/<name>` → that hub. Re-run after adding a skill folder; it is idempotent.
+
+## Credits
+
+Shaped by [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (the `tasks/plan.md` + `todo.md` convention, stage gating, clean-baseline checks) and [mattpocock/skills](https://github.com/mattpocock/skills) (grilling as a design-tree interview, per-repo `docs/agents/` config, writing for agents).

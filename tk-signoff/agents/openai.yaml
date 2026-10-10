@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Signoff"
+  short_description: "Trace requirements to code and verification, Go/No-Go, update specs"
+  default_prompt: "Use $tk-signoff: trace every R-id through plan, diff and verification, give a Go/No-Go, and on Go append the intent Outcome, update module specs, and empty docs/tasks."

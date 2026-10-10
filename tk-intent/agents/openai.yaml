@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Intent"
+  short_description: "Strengthen a human-written intent through a focused interview"
+  default_prompt: "Use $tk-intent on my intent draft: read it against the codebase, ask me only the important missing decisions one at a time, and patch the document in place."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Verify"
+  short_description: "Run typecheck, lint, format, tests and behaviour checks; record per R-id"
+  default_prompt: "Use $tk-verify: discover this repo's typecheck/lint/format/test commands, run them with warnings as failures, run the plan's behaviour checks, and record the results in docs/tasks/plan.md."

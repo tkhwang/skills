@@ -3,8 +3,8 @@
 #
 # Usage:
 #   ./link.sh                    link ALL skills in this repo (default)
-#   ./link.sh plan-execute       link only the named skill
-#   ./link.sh plan-execute foo   link several skills by name
+#   ./link.sh tk-plan            link only the named skill
+#   ./link.sh tk-plan tk-verify  link several skills by name
 #
 # Authoring workflow: develop skills here, run ./link.sh once, and Claude Code /
 # Codex use them live via symlinks. Edits are effective immediately and

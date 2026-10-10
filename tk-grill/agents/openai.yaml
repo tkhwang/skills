@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Grill"
+  short_description: "One-question-at-a-time interview to finalize a document"
+  default_prompt: "Use $tk-grill on this document: ask me only the important unresolved decisions one at a time with a recommendation, and patch my answers into the document."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Setup"
+  short_description: "Configure this repo for the tk-* workflow skills"
+  default_prompt: "Use $tk-setup to explore this repo and write docs/agents/tk-workflow.md (layout, docs paths, module codes, verify commands), asking me only about items you cannot discover."

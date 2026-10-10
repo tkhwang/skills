@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Workflow"
+  short_description: "Hub and driver for the tk staged workflow"
+  default_prompt: "Use $tk-workflow to derive where the current work stands from the docs and tell me the next tk-* stage to run."

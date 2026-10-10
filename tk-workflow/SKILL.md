@@ -32,8 +32,10 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 | `plan.md` filled, 0 boxes checked in `todo.md` | plan written | `tk-implement` (asks approval first) |
 | some boxes checked | implementing | `tk-implement` continues |
 | all boxes checked, no `## Verification` in `plan.md` | implemented | `tk-verify` |
-| `## Verification` has a failing row | verify failed | `tk-implement` |
-| `## Verification` all pass | verified | `tk-signoff` |
+| `## Verification` has a failing row, `stale: no` | verify failed | `tk-implement` (fixes) |
+| `## Verification` has `stale: yes` (code changed after the run) | re-verify | `tk-verify` |
+| `## Verification` has a `human` row for a MUST without a result | awaiting human checks | `tk-verify` (record results) |
+| `## Verification` all pass, `stale: no` | verified | `tk-signoff` |
 | `plan.md` empty, intent has `## Outcome` | done | new intent |
 
 "Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `plan.md` frontmatter `intent:` names the active intent (`AGENT001-tenant-export`). Several intents may exist without Outcome; the active one is the one `plan.md` names.

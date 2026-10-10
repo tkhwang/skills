@@ -17,6 +17,7 @@ Read `docs/agents/tk-workflow.md` first (packages and their paths, verify comman
 ## 1. Preconditions
 
 - `plan.md` is filled and `todo.md` has tasks.
+- **Fix mode**: if every box is already checked and `plan.md` `## Verification` has failing rows, add a `## Fixes` section to `todo.md` with one task per failing row (`covers:` the affected R-ids, `verify:` the failing command) and work those; the loop below is unchanged.
 - `plan.md` Decision Log shows no open decision; otherwise stop and point at `tk-grill`.
 - If no box is checked yet, ask "이 plan 으로 구현을 시작할까요?" and wait for an explicit yes.
 - Run `git status --porcelain`. Report uncommitted changes outside `docs/` in one line and ask whether to proceed. Inform only; the human owns commits.
@@ -41,6 +42,7 @@ For the next unchecked task:
 3. **Smallest change** inside the task's files. Simplest thing that works; three similar lines beat a premature abstraction.
 4. **Verify**: the task's focused command, plus typecheck of the touched package. Read the output. Full suites, lint and format belong to `tk-verify`; run a command again only after code changed.
 5. **Check off**: `- [x] T1.1 … · evidence: <command> → <result>` in `todo.md`, at the moment it passes.
+6. **Mark verification stale**: on the first code change after `plan.md` has a `## Verification` section, set its `stale: yes`. `tk-verify` must run again before signoff.
 
 A task is done only on observed passing output, or on evidence the human pasted.
 
@@ -70,3 +72,4 @@ When every box is checked: summary of tasks, evidence, files changed, Discovered
 - [ ] No `git commit`, `push`, `stash`, `checkout`, `reset` executed.
 - [ ] Default mode stopped at every `###` boundary.
 - [ ] Out-of-plan findings recorded under Discovered, not fixed silently.
+- [ ] `## Verification` marked `stale: yes` if it existed before this run's code changes.

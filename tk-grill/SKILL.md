@@ -12,6 +12,10 @@ Given a document, find what the human must still decide before it can be treated
 
 If `grilling` (mattpocock) is installed, follow its design-tree discipline for ordering; this skill still owns the importance filter, question format, and document patching.
 
+## Config
+
+Read `docs/agents/tk-workflow.md` first for the intents and tasks paths; without it, use the defaults `docs/intents/` and `docs/tasks/`. Profiles below are chosen against these resolved paths, not literal defaults.
+
 ## 1. Read
 
 Read the document, its linked documents (an intent for a plan; module specs for either), and the code it touches. Resolve from the repo every question the repo can answer, and record those as evidence rather than questions.
@@ -22,8 +26,8 @@ List every gap or decision candidate. Keep only those passing the profile's impo
 
 | Profile | Chosen when | Ask about | Leave alone |
 |---|---|---|---|
-| intent | path under the intents folder | vague success criteria, missing non-goals, scope boundary, conflicting or duplicate requirements, MUST vs SHOULD, hidden constraints, implementation detail written as requirement, several independent capabilities in one intent | how to build it, file layout, libraries |
-| plan | `docs/tasks/plan.md` | slice granularity and order, API / wire format, data model and migrations, authz, state machines, sync vs async, irreversible structure, conflicts with module specs, **new file or folder paths and names** | code style, test placement inside an approved path, checklist formatting |
+| intent | file under the configured intents path | vague success criteria, missing non-goals, scope boundary, conflicting or duplicate requirements, MUST vs SHOULD, hidden constraints, implementation detail written as requirement, several independent capabilities in one intent | how to build it, file layout, libraries |
+| plan | `plan.md` under the configured tasks path | slice granularity and order, API / wire format, data model and migrations, authz, state machines, sync vs async, irreversible structure, conflicts with module specs, **new file or folder paths and names** | code style, test placement inside an approved path, checklist formatting |
 | other | anything else | anything whose change would move another document or contract | wording |
 
 Order the remaining questions as a frontier: a question whose answer depends on another open question waits for it.

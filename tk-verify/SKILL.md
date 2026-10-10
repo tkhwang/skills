@@ -42,7 +42,7 @@ Append or replace `## Verification` in `plan.md`:
 
 ```markdown
 ## Verification
-run: 2026-10-10 14:02 · fix: no
+run: 2026-10-10 14:02 · fix: no · stale: no
 
 | package | check | command | result | notes |
 |---|---|---|---|---|
@@ -62,7 +62,11 @@ Keep the raw output of any failing command in a fenced block under the table.
 
 ## 5. Stop
 
-All rows pass (human checks may stay `human` with steps listed) → print the next command (`/tk-signoff` or `다음`). Any `fail` → list them with the R-ids affected and point at `tk-implement`. End the turn.
+- Any `fail` → list them with the R-ids affected and point at `tk-implement`. End the turn.
+- A `human` row that is the acceptance evidence for a **MUST** requirement needs a result before signoff: print the steps, ask the human to run them and report, and record `pass` / `fail` with their evidence. Until then the work is **awaiting human verification**; say so and end the turn without pointing at signoff.
+- Every row `pass` (a `human` row may stay open only for a SHOULD, and is listed as such) → print the next command (`/tk-signoff` or `다음`). End the turn.
+
+`tk-implement` sets `stale: yes` on this section when code changes after the run; a stale section means verify again.
 
 ## Verification
 

@@ -18,7 +18,7 @@ Read `docs/agents/tk-workflow.md` first (docs paths, packages, verify commands, 
 
 - **Intent**: the argument, or the single intent without `## Outcome`; several → ask. If its `## Open questions` is non-empty, offer to run `tk-grill` on it first; the human may decline.
 - **Approval**: ask "이 intent 로 계획을 세울까요?" and wait for an explicit yes.
-- **Active plan**: if `plan.md` is filled and `todo.md` has unchecked boxes for a *different* intent, **stop and ask**. Another session may be mid-build. Never overwrite it on your own.
+- **Active plan**: if `plan.md` is filled for a *different* intent, in any state (tasks open, all checked, verified, awaiting signoff), **stop and ask**. Only `tk-signoff` clears the working files; until then another session may be mid-build or its verification record is still needed. Never overwrite them on your own.
 
 Done when the intent is approved and `docs/tasks/` is free.
 
@@ -26,12 +26,15 @@ Done when the intent is approved and `docs/tasks/` is free.
 
 The intent (every R-id), the module specs under the specs path for every module touched, the code locations from the config, and the verify commands (config table, else `package.json` scripts and CI workflows).
 
-## 3. Draft slices
+## 3. Draft slices and write the draft
 
 - Map dependencies first; if a prefactor would make the change easy, it becomes **Slice 0**.
 - Cut the work into **vertical slices**: each delivers one demoable behaviour end to end. Inside a slice, order is `### Backend` then `### Frontend`; drop a sub-section the slice does not need. Shared types or API contracts are the first Backend task of the slice that introduces them.
 - Each task: one sentence, `covers: R…`, files likely touched, the focused verify command, acceptance criterion. A task touching more than ~5 files or two subsystems splits.
 - A wide mechanical refactor (rename across the codebase) is the exception: sequence it expand → migrate → contract instead of forcing a vertical slice.
+- **Write the draft now**: `plan.md` and `todo.md` from the templates, with the slices, proposed paths, and candidate decisions filled in and open items listed under `## Decision Log` as `open:`. `tk-grill` needs a file to read and patch.
+
+Done when both files exist with the draft content.
 
 ## 4. Resolve decisions
 
@@ -39,9 +42,9 @@ Invoke `tk-grill` on `plan.md` (plan profile). Its first question is slice granu
 
 Done when `tk-grill` reports the frontier empty.
 
-## 5. Write
+## 5. Finalize
 
-`plan.md` and `todo.md` from the templates. Fill the coverage matrix: every R-id maps to at least one task, every task cites at least one R-id (or Slice 0 prefactor).
+Apply the resolved decisions to both files: adjust slices, tasks, and paths; fill the coverage matrix so every R-id maps to at least one task and every task cites at least one R-id (or Slice 0 prefactor); leave no `open:` entry in Decision Log.
 
 ## 6. Stop
 

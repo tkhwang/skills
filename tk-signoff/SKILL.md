@@ -16,7 +16,7 @@ Read `docs/agents/tk-workflow.md` first (specs path, module codes). If missing, 
 
 ## 1. Preconditions
 
-`plan.md` has `## Verification` with no `fail` row. Otherwise point at `tk-verify`.
+`plan.md` has `## Verification` with `stale: no`, no `fail` row, and a recorded result for every `human` row that backs a MUST requirement. Otherwise point at `tk-verify`.
 
 ## 2. Trace
 

@@ -72,12 +72,6 @@ npx skills update
 
 `tk-grill` 은 단독으로 동작합니다. [`mattpocock/skills`](https://github.com/mattpocock/skills) 가 설치되어 있으면 그쪽 `grilling` 의 질문 순서 규율을 따릅니다.
 
-## 단독 skill
-
-| Skill | 설명 |
-|-------|------|
-| [`plan-decision-grill`](plan-decision-grill/) | 코딩 전에 plan, 설계, PRD 의 중요한 결정 게이트만 골라 점검합니다. 워크플로우 안에서는 `tk-grill` 이 같은 역할을 합니다. |
-
 ## 개발
 
 이 repo 를 clone 하고 `npx skills add` 대신 [`link.sh`](link.sh) 를 실행하면 수정이 바로 git 작업 트리에 반영됩니다:

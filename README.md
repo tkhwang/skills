@@ -72,12 +72,6 @@ Then, in a project: run `/tk-setup`, write your first intent, and run `/tk-inten
 
 `tk-grill` works on its own. If [`mattpocock/skills`](https://github.com/mattpocock/skills) is installed, it follows that repo's `grilling` discipline for question ordering.
 
-## Standalone
-
-| Skill | Description |
-|-------|-------------|
-| [`plan-decision-grill`](plan-decision-grill/) | Stress-test a plan, design, or PRD before coding by surfacing only the important decision gates. `tk-grill` covers the same ground inside the workflow. |
-
 ## Develop
 
 Clone this repo and run [`link.sh`](link.sh) instead of `npx skills add`, so edits flow straight to git:

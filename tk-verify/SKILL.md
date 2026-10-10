@@ -1,7 +1,7 @@
 ---
 name: tk-verify
 description: "Stage [3] of the tk workflow: run the repo's typecheck, lint (warnings fail), format check and tests, plus the plan's behaviour checks, and record results per R-id in plan.md. With phase or slice it is the checkpoint tk-implement calls mid-build: the same commands, scoped to what was just built, recorded in todo.md. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[phase | slice] [fix]"
+argument-hint: "[phase | slice | fix]"
 metadata:
   version: "0.2.0"
 ---
@@ -44,7 +44,7 @@ Per package in scope (full: all packages; `phase` / `slice`: the packages whose 
 4. full test suite, once
 5. behaviour checks from the plan's Verification plan: run what can be run (CLI, HTTP, scripts); list for the human what needs a browser or a device, with exact steps and the R-id each proves.
 
-With the `fix` argument: run the formatter's write mode and the linter's `--fix` first, then run the full sequence. Type errors and failing tests are never auto-fixed here.
+With the `fix` argument (full scope only; `phase fix` and `slice fix` are rejected with a one-line reason, since scoped runs never change code): run the formatter's write mode and the linter's `--fix` first, then run the full sequence. Type errors and failing tests are never auto-fixed here.
 
 ## 4. Record
 

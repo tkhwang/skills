@@ -27,9 +27,10 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 
 | Observation | Stage | Next |
 |---|---|---|
-| `plan.md` empty, no intent without `## Outcome` | before start | `tk-intent` |
-| intent without `## Outcome` but without any `R`-numbered requirement, `plan.md` empty | intent drafted | `tk-intent` (interview) |
-| intent without `## Outcome` with R-ids, `plan.md` empty | intent written | `tk-plan` |
+| `plan.md` empty, no intent file at all | before start | `tk-intent` |
+| `plan.md` empty, every intent has `## Outcome` | done | new intent (`tk-intent`) |
+| intent without `## Outcome` whose requirements are not all `R`-numbered with an acceptance criterion, `plan.md` empty | intent drafted | `tk-intent` (interview) |
+| intent without `## Outcome`, every requirement `R`-numbered with an acceptance criterion, `plan.md` empty | intent written | `tk-plan` (which offers `tk-grill` if `## Open questions` is non-empty) |
 | `plan.md` filled, 0 boxes checked in `todo.md` | plan written | `tk-implement` (`next` is the approval; asks when invoked directly) |
 | some boxes checked | implementing | `tk-implement` continues |
 | all boxes checked, no `## Verification` in `plan.md` | implemented | `tk-verify` |
@@ -37,7 +38,6 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 | `## Verification` has `stale: yes` (code changed after the run) | re-verify | `tk-verify` |
 | `## Verification` has a `human` row for a MUST without a result | awaiting human checks | `tk-verify` (record results) |
 | `## Verification` all pass, `stale: no` | verified | `tk-signoff` |
-| `plan.md` empty, intent has `## Outcome` | done | new intent |
 
 The first matching row from the top wins. "Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `plan.md` frontmatter `intent:` names the active intent (`AGENT001-tenant-export`). Several intents may exist without Outcome; the active one is the one `plan.md` names.
 

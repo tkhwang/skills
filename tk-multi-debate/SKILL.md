@@ -12,7 +12,7 @@ One decision, two or more peers, written rounds on disk. Each peer argues from t
 
 ## Config
 
-Read `docs/agents/tk-workflow.md` first: `## Peers` (name, kind, role, optional command override) and the docs paths. Peers whose role is `debate` or `any` take part. Fewer than two → the orchestrator's own kind runs headless as the second seat, and the record says so (`seat: self`). No `## Peers` → ask once, as `tk-multi-review` does.
+Read `docs/agents/tk-workflow.md` first: `## Peers` (name, kind, role, optional command override) and the docs paths. `<tasks>` below is the configured tasks path (default `docs/tasks/`); debate files live under `<tasks>/debates/`. Peers whose role is `debate` or `any` take part. Fewer than two → the orchestrator's own kind runs headless as the second seat, and the record says so (`seat: self`). No `## Peers` → ask once, as `tk-multi-review` does.
 
 ## 1. Decision
 
@@ -20,7 +20,7 @@ Read `docs/agents/tk-workflow.md` first: `## Peers` (name, kind, role, optional 
 - A sentence → use it as the question; if an `open:` entry matches, link them.
 - No argument → list the `open:` entries and ask which one.
 
-Write `docs/tasks/debates/<slug>.md`:
+Write `<tasks>/debates/<slug>.md`:
 
 ```markdown
 # Debate · <question>
@@ -66,7 +66,7 @@ Done when every round file exists (or carries `result: no answer` after a 10-min
 
 ## 3. Run
 
-Same commands and placement as `tk-multi-review` § 4: default command per kind (`claude -p`, `codex exec -s read-only`, `grok -p --permission-mode plan`), `command` column in `## Peers` overrides, inside herdr a sibling pane per peer via `herdr pane run`, elsewhere direct. The result is always the file.
+Same commands and placement as `tk-multi-review` § 4: default command per kind (`claude -p`, `codex exec -s read-only`, `grok -p --permission-mode plan`), `command` column in `## Peers` overrides only if it keeps the read-only flag (otherwise refuse it and use the default), inside herdr a sibling pane per peer via `herdr pane run`, elsewhere direct. The result is always the file.
 
 ## 4. Synthesize
 
@@ -82,7 +82,7 @@ No tally of votes. Two peers agreeing is evidence, not a decision.
 
 ## 5. Hand to the human
 
-Build the `tk-grill` question from the synthesis: options from `## Options on the table`, `Evidence:` pointing at the debate file, the synthesis recommendation as `Recommendation`. Replace the `open:` entry's text with `open: … · debated: docs/tasks/debates/<slug>.md`. Then invoke `tk-grill` on the artifact so the question is asked in the standard format and the answer lands in the Decision Log. Standalone (no tk artifact): print the question in `tk-grill` format and end the turn.
+Build the `tk-grill` question from the synthesis: options from `## Options on the table`, `Evidence:` pointing at the debate file, the synthesis recommendation as `Recommendation`. Replace the `open:` entry's text with `open: … · debated: <tasks>/debates/<slug>.md`. Then invoke `tk-grill` on the artifact so the question is asked in the standard format and the answer lands in the Decision Log. Standalone (no tk artifact): print the question in `tk-grill` format and end the turn.
 
 ## 6. Stop
 
@@ -93,4 +93,4 @@ Print the peers, the recommendation each ended with, the synthesis recommendatio
 - [ ] Every peer ran read-only in its own process; round 1 was written before any peer saw another's file.
 - [ ] Synthesis records facts with evidence and leaves preference to the human; no vote count decides.
 - [ ] The open decision was resolved only through `tk-grill`, by the human's answer.
-- [ ] The debate file and round files are under `docs/tasks/debates/`, to be emptied at signoff.
+- [ ] The debate file and round files are under `<tasks>/debates/`, to be emptied at signoff.

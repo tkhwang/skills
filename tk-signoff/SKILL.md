@@ -1,9 +1,8 @@
 ---
 name: tk-signoff
 description: "Stage [4] of the tk workflow: trace every requirement through plan, code, tests and verification, decide Go / No-Go, and on Go update the intent Outcome and module specs and empty docs/tasks. Use when the user runs it or tk-workflow routes to it."
-argument-hint: ""
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # tk-signoff
@@ -29,7 +28,7 @@ Then check:
 
 - **Scope creep**: changed files that no task cites. Each is either justified (Slice 0 prefactor, Discovered follow-up explicitly accepted) or a finding.
 - **Drift**: places where the implementation differs from the intent or from plan decisions.
-- **Leftovers**: Discovered items, human checks still open, SHOULD requirements not delivered.
+- **Leftovers**: Discovered items, human checks still open, SHOULD requirements not delivered, review findings triaged `deferred` under `docs/tasks/reviews/`.
 
 ## 3. Verdict
 
@@ -42,7 +41,7 @@ Then check:
 1. **Intent**: append `## Outcome` (date, verdict, what shipped per R-id, deferred items, Discovered follow-ups). This marks the intent done.
 2. **Module specs** under the specs path for every module touched: describe the **current behaviour in timeless language** ("exports are streamed as CSV"), never the change ("added CSV export"). Create a spec file for a new topic; otherwise patch the existing one.
 3. **Other existing docs** the change affects (README usage, CHANGELOG if the repo keeps one, an ADR only for a hard-to-reverse decision recorded in the plan). Update what exists; create nothing new beyond specs.
-4. **Empty the working files**: replace `plan.md` with `# Plan\n\n_No active work. Run /tk-plan to start._` and `todo.md` with `# Todo\n\n_No active work._`. Their history stays in git.
+4. **Empty the working files**: replace `plan.md` with `# Plan\n\n_No active work. Run /tk-plan to start._` and `todo.md` with `# Todo\n\n_No active work._`; delete the contents of `docs/tasks/reviews/` and `docs/tasks/debates/`. Their history stays in git.
 
 ## 5. Stop
 

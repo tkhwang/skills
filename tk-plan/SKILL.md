@@ -3,7 +3,7 @@ name: tk-plan
 description: "Stage [1] of the tk workflow: turn an intent into docs/tasks/plan.md and todo.md as vertical slices, each Backend then Frontend, with an R-id coverage matrix and no unresolved decisions. Use when the user runs it or tk-workflow routes to it."
 argument-hint: "[MODULE###-slug]"
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # tk-plan
@@ -17,8 +17,9 @@ Read `docs/agents/tk-workflow.md` first (docs paths, packages, verify commands, 
 ## 1. Preconditions
 
 - **Intent**: the argument, or the single intent without `## Outcome`; several → ask. If its `## Open questions` is non-empty, offer to run `tk-grill` on it first; the human may decline.
-- **Approval**: ask "이 intent 로 계획을 세울까요?" and wait for an explicit yes.
+- **Approval**: entered through the driver's `다음` / `next`, that keyword is the approval. Invoked directly, ask "이 intent 로 계획을 세울까요?" and wait for an explicit yes.
 - **Active plan**: if `plan.md` is filled for a *different* intent, in any state (tasks open, all checked, verified, awaiting signoff), **stop and ask**. Only `tk-signoff` clears the working files; until then another session may be mid-build or its verification record is still needed. Never overwrite them on your own.
+- **Same intent, plan already filled** (re-planning): treat it as a revision. Keep `## Decision Log` and `## Discovered`, redraft the sections the request names, and re-run step 4 only for decisions the redraft reopened. If any box in `todo.md` is checked, stop and ask; implemented work is not re-planned silently.
 
 Done when the intent is approved and `docs/tasks/` is free.
 
@@ -48,7 +49,7 @@ Apply the resolved decisions to both files: adjust slices, tasks, and paths; fil
 
 ## 6. Stop
 
-Summarize: slices, task count, decisions made, risks, verify commands. Print the next command (`/tk-implement` or `다음`). End the turn.
+Summarize: slices, task count, decisions made, risks, verify commands. Print the next command (`/tk-implement` or `다음`; `리뷰` to have peers read the plan first, `토론 Q<n>` to contest a decision). End the turn.
 
 ## plan.md template
 

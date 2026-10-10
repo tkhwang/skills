@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Multi Review"
+  short_description: "Peer agents review the current stage artifact; findings triaged into patches or questions"
+  default_prompt: "Use $tk-multi-review on the current stage: have the configured peer agents review the artifact read-only, collect their findings as files, patch what they got right, and ask me the decisions one at a time."

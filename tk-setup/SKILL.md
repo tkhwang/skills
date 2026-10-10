@@ -4,7 +4,7 @@ description: "Configure a repo for the tk-* workflow skills: layout, docs paths,
 argument-hint: "[optional notes about the repo]"
 disable-model-invocation: true
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # tk-setup
@@ -20,6 +20,7 @@ Read before asking. Collect:
 - **Commands**: each package's scripts for typecheck, lint, format, test; checked-in wrappers; CI workflows under `.github/workflows/` and what they actually run. CI is the source of truth for what gates merges.
 - **Existing docs**: `docs/` tree; any `intents/`, `specs/`, `tasks/`, `plans/` folders, possibly nested as `docs/<module>/…`; existing intent filenames and their module codes (`AGENT001-…` → `AGENT`).
 - **Existing agent config**: `CLAUDE.md`, `AGENTS.md`, an `## Agent skills` block, `docs/agents/*.md` from other skill sets.
+- **Peer agents**: which of `claude`, `codex`, `grok` are on `PATH` (`command -v`), and whether this session runs inside herdr (`HERDR_ENV=1`). These feed `## Peers` for `tk-multi-review` / `tk-multi-debate`.
 
 Done when you can fill every section of the config template below with either a discovered value or a clearly marked question.
 
@@ -31,6 +32,7 @@ Show the filled draft. Then ask only the items exploration could not settle, one
 - **Docs paths** when the repo already nests docs by module (`docs/<module>/intents/`): keep that pattern (`{module}` placeholder) or use flat `docs/intents/`.
 - **Module codes** when none exist yet: ask for the initial list (uppercase code, short name, code locations). An empty table is acceptable; `tk-intent` adds codes on first use.
 - **Language** for conversation and documents: default `ko` / follow existing docs.
+- **Peers** when more than one agent kind is installed: which kinds review, which debate (recommended: every installed kind other than the one running this session reviews; all installed kinds debate). One kind or none → write the table from what is installed without asking.
 
 Skip any question whose answer exploration already gave.
 
@@ -80,6 +82,12 @@ Done when both files exist and the config has no unresolved question marks. Tell
 ## Language
 - conversation: ko
 - documents: ko                  # or "follow existing docs"
+
+## Peers
+| name     | kind  | role   | command |
+|----------|-------|--------|---------|
+| reviewer | codex | review |         |   # role: review | debate | any · command: optional override
+| debater  | grok  | debate |         |
 ```
 
 ## Verification
@@ -87,3 +95,4 @@ Done when both files exist and the config has no unresolved question marks. Tell
 - [ ] Every `Verify` command was found in scripts or CI, not guessed.
 - [ ] `Modules` codes match existing intent filenames, if any.
 - [ ] The pointer block is in exactly one of `CLAUDE.md` / `AGENTS.md`.
+- [ ] Every `Peers` kind is installed on this machine, or the row is marked `not installed`.

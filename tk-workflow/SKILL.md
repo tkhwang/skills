@@ -1,15 +1,15 @@
 ---
 name: tk-workflow
 description: "Hub and driver for the tk staged workflow: shows where work stands, routes to the next tk-* stage, and runs the next / revise / auto keyword protocol."
-argument-hint: "[status | start <MODULE> <title> | next]"
+argument-hint: "[status | start <MODULE> <title> | next | auto | slice | all]"
 disable-model-invocation: true
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # tk-workflow
 
-One agent, five stages, state derived from files. Each stage reads a document, writes a document, and ends the turn so the human approves before the next stage.
+Five stages, state derived from files. One agent drives; peers join for review and debate on request. Each stage reads a document, writes a document, and ends the turn so the human approves before the next stage.
 
 ```
  [0] tk-intent ─▶ [1] tk-plan ─▶ [2] tk-implement ─▶ [3] tk-verify ─▶ [4] tk-signoff
@@ -17,7 +17,7 @@ One agent, five stages, state derived from files. Each stage reads a document, w
    (permanent)      plan.md,todo.md  checkboxes          ## Verification  specs, empty tasks
 ```
 
-`tk-grill` is the shared interview used by `tk-intent` and `tk-plan`. `tk-setup` writes the per-repo config.
+`tk-grill` is the shared interview used by `tk-intent` and `tk-plan`. `tk-setup` writes the per-repo config. `tk-multi-review` and `tk-multi-debate` bring peer agents (claude, codex, grok) in at any gate; they read, the orchestrating agent writes.
 
 ## Config
 
@@ -28,8 +28,9 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 | Observation | Stage | Next |
 |---|---|---|
 | `plan.md` empty, no intent without `## Outcome` | before start | `tk-intent` |
-| intent without `## Outcome` exists, `plan.md` empty | intent written | `tk-plan` |
-| `plan.md` filled, 0 boxes checked in `todo.md` | plan written | `tk-implement` (asks approval first) |
+| intent without `## Outcome` but without any `R`-numbered requirement, `plan.md` empty | intent drafted | `tk-intent` (interview) |
+| intent without `## Outcome` with R-ids, `plan.md` empty | intent written | `tk-plan` |
+| `plan.md` filled, 0 boxes checked in `todo.md` | plan written | `tk-implement` (`next` is the approval; asks when invoked directly) |
 | some boxes checked | implementing | `tk-implement` continues |
 | all boxes checked, no `## Verification` in `plan.md` | implemented | `tk-verify` |
 | `## Verification` has a failing row, `stale: no` | verify failed | `tk-implement` (fixes) |
@@ -38,7 +39,7 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 | `## Verification` all pass, `stale: no` | verified | `tk-signoff` |
 | `plan.md` empty, intent has `## Outcome` | done | new intent |
 
-"Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `plan.md` frontmatter `intent:` names the active intent (`AGENT001-tenant-export`). Several intents may exist without Outcome; the active one is the one `plan.md` names.
+The first matching row from the top wins. "Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `plan.md` frontmatter `intent:` names the active intent (`AGENT001-tenant-export`). Several intents may exist without Outcome; the active one is the one `plan.md` names.
 
 ## Commands
 
@@ -56,7 +57,9 @@ Once this skill has run in a session, plain keywords continue the flow without r
 |---|---|
 | `다음` / `next` / `go` | Treat the current artifact as approved; invoke the next stage |
 | `수정: …` / `revise: …` | Patch the current stage's artifact as asked; wait for approval again |
-| `auto` | Run `tk-implement` in auto mode (no stops between sub-phases) |
+| `auto` / `slice` / `all` | Run `tk-implement` stopping after each Backend / Frontend sub-phase (`auto`, the default), after each slice (`slice`), or only at the end (`all`); every sub-phase still gets its `tk-verify phase` checkpoint |
+| `리뷰 [stage] [peer…]` / `review …` | Run `tk-multi-review` on the artifact awaiting approval; the artifact stays unapproved |
+| `토론 <Q<n> or sentence>` / `debate …` | Run `tk-multi-debate` on an open decision; the answer still comes from the human via `tk-grill` |
 | `상태` / `status` | Re-derive state from files and report |
 | `중단` / `stop` | Leave files as they are and stop driving |
 
@@ -65,11 +68,12 @@ Approval is explicit. "알아서 해" and "whatever you think" are delegation: o
 ## Conventions every tk-* skill follows
 
 - **Turn boundary.** A stage saves its artifact, prints a short summary and the next command, and ends the turn. One stage per turn.
-- **Approval lives in conversation**, checked by the next stage at its start, never stored in files.
+- **Approval lives in conversation**, checked by the next stage at its start, never stored in files. `다음` / `next` **is** the approval: a stage entered through the driver does not ask "shall I start?" again; a stage invoked directly by its slash command does.
 - **One active work item.** Parallel work uses git worktrees, which gives each its own `plan.md`.
 - **git is read-only for the agent**: `status`, `diff`, `log`. Commits, pushes, stashes, checkouts are the human's.
 - **Commands come from the repo** (config, `package.json`, CI). Run a command again only after code changed.
-- **Language**: talk to the user in the config's conversation language (Korean for this user); write documents in the config's document language; keep code, identifiers and commands untranslated.
+- **Language**: talk to the user in the config's conversation language; write documents in the config's document language; keep code, identifiers and commands untranslated.
+- **Peers are read-only.** `tk-multi-*` run other agents headless in their own processes; their output is a file under `docs/tasks/reviews/` or `docs/tasks/debates/`. Only the orchestrating agent edits documents or code.
 - **Repo conventions win.** If the repo already lays docs out differently, follow it via `tk-setup` config.
 
 ## Verification

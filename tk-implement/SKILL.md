@@ -1,14 +1,14 @@
 ---
 name: tk-implement
-description: "Stage [2] of the tk workflow: implement docs/tasks/todo.md task by task, stopping at every Backend/Frontend sub-phase boundary (or running to the end with auto), checking boxes with evidence. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[auto]"
+description: "Stage [2] of the tk workflow: implement docs/tasks/todo.md task by task, checking boxes with evidence. Every Backend/Frontend sub-phase ends with a tk-verify phase checkpoint that is self-fixed up to three rounds. auto (the default) stops after each Backend / Frontend sub-phase; slice stops after each slice (with a tk-verify slice checkpoint); all runs to the end. Use when the user runs it or tk-workflow routes to it."
+argument-hint: "[auto | slice | all]"
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # tk-implement
 
-Work the task list in order. Verify each task with its focused command, check it off with evidence, and pause at sub-phase boundaries so the human can look. The agent changes code and `docs/tasks/`; it never changes git state.
+Work the task list in order. Verify each task with its focused command, check it off with evidence, run a checkpoint at every sub-phase boundary, and pause where the chosen mode says so the human can look. The agent changes code and `docs/tasks/`; it never changes git state.
 
 ## Config
 
@@ -19,19 +19,22 @@ Read `docs/agents/tk-workflow.md` first (packages and their paths, verify comman
 - `plan.md` is filled and `todo.md` has tasks.
 - **Fix mode**: if every box is already checked and `plan.md` `## Verification` has failing rows, add a `## Fixes` section to `todo.md` with one task per failing row (`covers:` the affected R-ids, `verify:` the failing command) and work those; the loop below is unchanged.
 - `plan.md` Decision Log shows no open decision; otherwise stop and point at `tk-grill`.
-- If no box is checked yet, ask "이 plan 으로 구현을 시작할까요?" and wait for an explicit yes.
+- If no box is checked yet: entered through the driver's `다음` / `next`, that keyword is the approval; invoked directly, ask "이 plan 으로 구현을 시작할까요?" and wait for an explicit yes.
 - Run `git status --porcelain`. Report uncommitted changes outside `docs/` in one line and ask whether to proceed. Inform only; the human owns commits.
 
 Done when approval is explicit and the starting point is known.
 
 ## 2. Mode
 
-| Mode | Stops |
-|---|---|
-| default | after every `###` sub-phase (Backend or Frontend of a slice): report, wait for `다음` |
-| `auto` | only at safety gates below |
+The mode only decides where the agent stops for the human. Every mode runs the same per-task loop and calls `tk-verify phase` at every `###` boundary; `slice` and `all` also call `tk-verify slice` at every `##` boundary.
 
-`auto` is selected by the argument or by the driver keyword. Both modes run the same per-task loop.
+| Mode | Stops after | Typical use |
+|---|---|---|
+| `auto` (default) | every `###` sub-phase: Backend in one go, stop, Frontend in one go, stop | look at the API before the UI is built on it |
+| `slice` | every `##` slice: Backend → Frontend in one go | see one demoable behaviour at a time |
+| `all` | the last task only | small plans, or a plan the human has already reviewed closely |
+
+Safety gates and a checkpoint that stays red stop every mode. The mode comes from the argument or the driver keyword; no argument means `auto`.
 
 ## 3. Task loop
 
@@ -46,9 +49,17 @@ For the next unchecked task:
 
 A task is done only on observed passing output, or on evidence the human pasted.
 
-## 4. Sub-phase boundary (default mode)
+## 4. Checkpoint
 
-When the last task of a `###` section is checked: report what changed, the evidence, remaining risk, and the next sub-phase. End the turn. Resume on `다음`.
+When the last task of a `###` section is checked, invoke `tk-verify phase` with the Skill tool. When that section was also the last of its `##` slice and the mode is `slice` or `all`, invoke `tk-verify slice` as well. `tk-verify` runs the scoped commands, writes the `checkpoint:` line in `todo.md`, and reports pass or fail with raw output; it never edits code.
+
+- **Green** → continue to the mode's stop rule below.
+- **Red** → fix inside the sub-phase's (or slice's) files, then invoke the same `tk-verify` scope again, up to three rounds. A fix that needs a file outside that scope, a decision, or a fourth round is a safety gate: stop, show the raw failing output, point at what is needed.
+
+Then, by mode:
+
+- **Stopping here** (`auto` at every `###`; `slice` when the `###` is the last of its `##` slice): report what changed, the checkpoint line, remaining risk, and what comes next. End the turn. Resume on `다음`.
+- **Continuing** (`slice` mid-slice; `all` anywhere): print the checkpoint line and the next sub-phase in one line each, and go on without ending the turn.
 
 ## 5. Scope discipline
 
@@ -64,12 +75,12 @@ Anything the plan did not ask for goes to `plan.md` `## Discovered` as `NOTICED,
 
 ## 6. Done
 
-When every box is checked: summary of tasks, evidence, files changed, Discovered items. Print the next command (`/tk-verify` or `다음`). End the turn.
+When every box is checked: summary of tasks, evidence, files changed, Discovered items. Print the next command (`/tk-verify` or `다음`; `리뷰` to have peers review the diff first). End the turn.
 
 ## Verification
 
 - [ ] Each task checked only after reading passing output.
 - [ ] No `git commit`, `push`, `stash`, `checkout`, `reset` executed.
-- [ ] Default mode stopped at every `###` boundary.
+- [ ] Every `###` section (and every `##` slice in `slice` / `all`) carries a `checkpoint:` line written by `tk-verify`; the agent stopped where the mode says and continued only on green.
 - [ ] Out-of-plan findings recorded under Discovered, not fixed silently.
 - [ ] `## Verification` marked `stale: yes` if it existed before this run's code changes.

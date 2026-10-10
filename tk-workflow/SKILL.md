@@ -28,7 +28,7 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 | Observation | Stage | Next |
 |---|---|---|
 | `plan.md` empty, no intent file at all | before start | `tk-intent <MODULE> <title>` (scaffold) |
-| intent without `## Outcome` whose human sections (Background, Goal, Success criteria, Requirements) hold only the template's guide comments | intent scaffolded | the human writes the draft, then `tk-intent <ID>` |
+| intent without `## Outcome` whose human sections (Background, Goal, Success criteria, Requirements) are all empty: only the template's guide comment, blank lines, or a bare `- ` (the same test `tk-intent` uses) | intent scaffolded | the human writes the draft, then `tk-intent <ID>` |
 | `plan.md` empty, every intent has `## Outcome` | done | new intent (`tk-intent`) |
 | intent without `## Outcome` whose requirements are not all `R`-numbered with an acceptance criterion, `plan.md` empty | intent drafted | `tk-intent` (interview) |
 | intent without `## Outcome`, every requirement `R`-numbered with an acceptance criterion, `plan.md` empty | intent written | `tk-plan` (which offers `tk-grill` if `## Open questions` is non-empty) |

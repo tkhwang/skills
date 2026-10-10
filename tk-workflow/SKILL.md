@@ -1,7 +1,7 @@
 ---
 name: tk-workflow
 description: "Hub and driver for the tk staged workflow: shows where work stands, routes to the next tk-* stage, and runs the next / revise / auto keyword protocol."
-argument-hint: "[status | start <MODULE> <title> | next | auto | slice | all]"
+argument-hint: "[status | start [<MODULE> <title> [ko|en]] | next | auto | slice | all]"
 disable-model-invocation: true
 metadata:
   version: "0.3.0"
@@ -27,7 +27,8 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 
 | Observation | Stage | Next |
 |---|---|---|
-| `plan.md` empty, no intent file at all | before start | `tk-intent` |
+| `plan.md` empty, no intent file at all | before start | `tk-intent <MODULE> <title>` (scaffold) |
+| intent without `## Outcome` whose human sections (Background, Goal, Success criteria, Requirements) hold only the template's guide comments | intent scaffolded | the human writes the draft, then `tk-intent <ID>` |
 | `plan.md` empty, every intent has `## Outcome` | done | new intent (`tk-intent`) |
 | intent without `## Outcome` whose requirements are not all `R`-numbered with an acceptance criterion, `plan.md` empty | intent drafted | `tk-intent` (interview) |
 | intent without `## Outcome`, every requirement `R`-numbered with an acceptance criterion, `plan.md` empty | intent written | `tk-plan` (which offers `tk-grill` if `## Open questions` is non-empty) |
@@ -45,7 +46,7 @@ The first matching row from the top wins. "Empty" means `plan.md` is missing or 
 
 **`status`** (default). Derive the row above for the active intent, list other intents without Outcome, and print the next slash command. Done when the user can see stage and next step in under ten lines.
 
-**`start <MODULE> <title>`**. Hand off to `tk-intent` with the arguments. The human writes the first draft; this command only scaffolds.
+**`start [<MODULE> <title> [ko|en]]`**. Hand off to `tk-intent` with the arguments; without them `tk-intent` asks module, title and language. It copies the intent template to a new file and ends the turn; the human writes the first draft, then runs `tk-intent <ID>`.
 
 **`next`**. Derive the stage and invoke the next skill with the Skill tool. Done when that skill has ended its turn.
 

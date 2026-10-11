@@ -29,7 +29,7 @@ Read `docs/agents/tk-workflow.md` first (intents path, module codes, document la
 
 ## Template
 
-`templates/intent.md` (Korean guide comments, the default) and `templates/intent.en.md` (English), next to this `SKILL.md`. Language is chosen in this order: an explicit `ko` / `en` as the last argument → the config's document language if it is `ko` or `en` → `ko`. Placeholders: `{{ID}}`, `{{SLUG}}`, `{{TITLE}}`, `{{DATE}}` (today, `YYYY-MM-DD`).
+`templates/intent.md` (Korean guide comments, the default) and `templates/intent.en.md` (English), next to this `SKILL.md`. Language is chosen in this order: an explicit `ko` / `en` as the last argument → the config's document language if it is `ko` or `en` → `ko`. Placeholders: `{{ID}}`, `{{SLUG}}`, `{{TITLE}}`, `{{DATE}}` (now, UTC ISO 8601 `YYYY-MM-DDTHH:MM:SS.sssZ`, e.g. `2026-10-11T03:38:53.000Z`; fills both `created` and `updated`).
 
 Sections, in order: Background, Goal, Non-goals, Success criteria, Constraints, Requirements (human writes these), then Open questions, Planning hints, Decision Log (this skill and `tk-grill` fill these). Each section opens with an HTML guide comment telling the human what belongs there. `## Outcome` is appended by `tk-signoff` and marks the intent done.
 
@@ -59,7 +59,7 @@ Argument is `<MODULE> <title> [ko|en]` (typed, or collected in step 0) and no fi
 /tk-intent AGENT Tenant data export en       → same file, English template
 ```
 
-1. Resolve the intents directory from the config (`{module}` → `agent`), then compute `ID`, `SLUG`, `DATE`; keep `TITLE` exactly as given (without the language token).
+1. Resolve the intents directory from the config (`{module}` → `agent`), then compute `ID`, `SLUG`, `DATE`; keep `TITLE` exactly as given (without the language token). `DATE` is the current UTC time in ISO 8601 (`date -u +%Y-%m-%dT%H:%M:%S.000Z`), never a bare date.
 2. Copy the template to that path, substituting the placeholders. Create missing directories. Change nothing else; the guide comments stay.
 3. Print the path, the section list the human is expected to fill (Background … Requirements), and the command to come back with (`/tk-intent <ID>`).
 4. **End the turn.** Do not fill any section, do not start the interview.
@@ -92,6 +92,7 @@ Done when `tk-grill` reports the frontier empty.
 - Number requirements `R1`, `R2`, … with `MUST` / `SHOULD` and one observable acceptance criterion each.
 - Move implementation hints (file names, libraries, schemas) the human wrote into `## Planning hints`. They inform `tk-plan` without becoming requirements.
 - Leave genuinely open items under `## Open questions`.
+- Set frontmatter `updated` to the current UTC ISO 8601 timestamp whenever this skill patches the file.
 - Remove the guide comment from every section that now has content, and the header comment under the title. A section that is legitimately empty (no non-goals, no open questions) keeps a one-line `_None._` instead of the comment.
 
 Done when every requirement has an R-id and an acceptance criterion, the document contains no implementation detail outside Planning hints, and no guide comment remains.

@@ -2,6 +2,7 @@
 id: {{ID}}
 slug: {{SLUG}}
 created: {{DATE}}
+updated: {{DATE}}
 ---
 # {{ID}} · {{TITLE}}
 

@@ -1,10 +1,10 @@
 ---
 name: tk-workflow
-description: "Hub and driver for the tk staged workflow: shows where work stands, routes to the next tk-* stage, and runs the next / revise / auto keyword protocol."
-argument-hint: "[status | start [<MODULE> <title> [ko|en]] | next | auto | slice | all]"
+description: "Hub and driver for the tk staged workflow: shows where work stands, routes to the next tk-* stage, and runs the next / revise / all / slice keyword protocol."
+argument-hint: "[status | start [<MODULE> <title> [ko|en]] | next | all | slice]"
 disable-model-invocation: true
 metadata:
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
 # tk-workflow
@@ -58,7 +58,7 @@ Once this skill has run in a session, plain keywords continue the flow without r
 |---|---|
 | `다음` / `next` / `go` | Treat the current artifact as approved; invoke the next stage |
 | `수정: …` / `revise: …` | Patch the current stage's artifact as asked; wait for approval again |
-| `auto` / `slice` / `all` | Run `tk-implement` stopping after each Backend / Frontend sub-phase (`auto`, the default), after each slice (`slice`), or only at the end (`all`); every sub-phase still gets its `tk-verify phase` checkpoint |
+| `all` / `slice` | Run `tk-implement` to the end (`all`, the default) or stopping after each slice (`slice`). Either mode stops after a sub-phase that changed the database, and checkpoints every sub-phase and slice. The mode is written to `todo.md`, so `다음` resumes in it |
 | `리뷰 [stage] [peer…]` / `review …` | Run `tk-multi-review` on the artifact awaiting approval; the artifact stays unapproved |
 | `토론 <Q<n> or sentence>` / `debate …` | Run `tk-multi-debate` on an open decision; the answer still comes from the human via `tk-grill` |
 | `상태` / `status` | Re-derive state from files and report |
@@ -68,7 +68,7 @@ Approval is explicit. "알아서 해" and "whatever you think" are delegation: o
 
 ## Conventions every tk-* skill follows
 
-- **Turn boundary.** A stage saves its artifact, prints a short summary and the next command, and ends the turn. One stage per turn.
+- **Turn boundary.** A stage saves its artifact, prints a short summary and the next command, and ends the turn. One stage per turn. A checkpoint a stage invokes mid-run (`tk-implement` → `tk-verify phase` / `slice`) belongs to that stage's turn and does not end it.
 - **Approval lives in conversation**, checked by the next stage at its start, never stored in files. `다음` / `next` **is** the approval: a stage entered through the driver does not ask "shall I start?" again; a stage invoked directly by its slash command does.
 - **One active work item.** Parallel work uses git worktrees, which gives each its own `plan.md`.
 - **git is read-only for the agent**: `status`, `diff`, `log`. Commits, pushes, stashes, checkouts are the human's.

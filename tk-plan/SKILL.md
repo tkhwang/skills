@@ -3,7 +3,7 @@ name: tk-plan
 description: "Stage [1] of the tk workflow: turn an intent into docs/tasks/plan.md and todo.md as vertical slices, each Backend then Frontend, with an R-id coverage matrix and no unresolved decisions. Use when the user runs it or tk-workflow routes to it."
 argument-hint: "[MODULE###-slug]"
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # tk-plan
@@ -31,7 +31,7 @@ The intent (every R-id), the module specs under the specs path for every module 
 
 - Map dependencies first; if a prefactor would make the change easy, it becomes **Slice 0**.
 - Cut the work into **vertical slices**: each delivers one demoable behaviour end to end. Inside a slice, order is `### Backend` then `### Frontend`; drop a sub-section the slice does not need. Shared types or API contracts are the first Backend task of the slice that introduces them.
-- Each task: one sentence, `covers: R…`, files likely touched, the focused verify command, acceptance criterion. A task touching more than ~5 files or two subsystems splits.
+- Each task: one sentence, `covers: R…`, files likely touched, the focused verify command, acceptance criterion. A task touching more than ~5 files or two subsystems splits. A task that adds or changes a migration, schema, or seed also carries `db: yes`, and only such a task: `tk-implement` stops after its sub-phase for the human to look.
 - A wide mechanical refactor (rename across the codebase) is the exception: sequence it expand → migrate → contract instead of forcing a vertical slice.
 - **Write the draft now**: `plan.md` and `todo.md` from the templates, with the slices, proposed paths, and candidate decisions filled in and open items listed under `## Decision Log` as `open:`. `tk-grill` needs a file to read and patch.
 
@@ -49,7 +49,7 @@ Apply the resolved decisions to both files: adjust slices, tasks, and paths; fil
 
 ## 6. Stop
 
-Summarize: slices, task count, decisions made, risks, verify commands. Print the next command (`/tk-implement` or `다음`; `리뷰` to have peers read the plan first, `토론 Q<n>` to contest a decision). End the turn.
+Summarize: slices, task count, decisions made, risks, verify commands, and the sub-phases where `tk-implement` will stop for a database change (`db: yes`). Print the next command (`/tk-implement` or `다음`; `리뷰` to have peers read the plan first, `토론 Q<n>` to contest a decision). End the turn.
 
 ## plan.md template
 
@@ -91,9 +91,10 @@ Behaviour checks: <how each R-id is observed>
 
 ## Slice 1: <behaviour>
 ### Backend
-- [ ] T1.1 <task> · covers: R1 · files: … · verify: `<cmd>` · accept: <condition>
-### Frontend
+- [ ] T1.1 <task> · covers: R1 · files: … · db: yes · verify: `<cmd>` · accept: <condition>
 - [ ] T1.2 <task> · covers: R1 · files: … · verify: `<cmd>` · accept: <condition>
+### Frontend
+- [ ] T1.3 <task> · covers: R1 · files: … · verify: `<cmd>` · accept: <condition>
 
 ## Slice 2: <behaviour>
 ### Backend
@@ -104,5 +105,6 @@ Behaviour checks: <how each R-id is observed>
 
 - [ ] No code was written.
 - [ ] Every R-id appears in Coverage; every task cites an R-id.
+- [ ] Every task that changes a migration, schema, or seed carries `db: yes`; no other task does.
 - [ ] Decision Log shows no open decision; new paths are named.
 - [ ] Turn ended; `tk-implement` was not started.

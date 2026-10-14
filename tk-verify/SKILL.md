@@ -3,7 +3,7 @@ name: tk-verify
 description: "Stage [3] of the tk workflow: run the repo's typecheck, lint (warnings fail), format check and tests, plus the plan's behaviour checks, and record results per R-id in plan.md. With phase or slice it is the checkpoint tk-implement calls mid-build: the same commands, scoped to what was just built, recorded in todo.md. Use when the user runs it or tk-workflow routes to it."
 argument-hint: "[phase | slice | fix]"
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # tk-verify
@@ -15,10 +15,10 @@ Measure, then report; never fix code. Commands come from the repo and warnings c
 | Argument | Runs | Records | Called by |
 |---|---|---|---|
 | `phase` | typecheck and lint of the packages the last `###` sub-phase touched, plus that sub-phase's `verify:` commands | `checkpoint: <cmd> ✓ · <cmd> ✗ · YYYY-MM-DD HH:MM` under that `###` heading in `todo.md` | `tk-implement` at every sub-phase boundary |
-| `slice` | as `phase` over the whole `##` slice, plus the plan's behaviour checks for the R-ids that slice covers, where they can run without a human | the same line under the `##` heading | `tk-implement` in `slice` / `all` at a slice boundary |
+| `slice` | as `phase` over the whole `##` slice, plus the plan's behaviour checks for the R-ids that slice covers, where they can run without a human | the same line under the `##` heading | `tk-implement` at every slice boundary |
 | (none) | everything below, all packages | `plan.md` `## Verification` | the human or the driver after the last task |
 
-A scoped run never touches `plan.md` and never changes the `stale:` flag. On a failure it reports the raw output and returns; fixing is `tk-implement`'s job.
+A scoped run never touches `plan.md` and never changes the `stale:` flag. Pass or fail, it reports and returns to `tk-implement` in the same turn without ending it; fixing and deciding where to stop are `tk-implement`'s job. §5 applies to full runs only.
 
 ## Config
 
@@ -48,7 +48,7 @@ With the `fix` argument (full scope only; `phase fix` and `slice fix` are reject
 
 ## 4. Record
 
-Scoped run: write the `checkpoint:` line in `todo.md` and stop here. Full run: append or replace `## Verification` in `plan.md`:
+Scoped run: write the `checkpoint:` line in `todo.md`, report pass or fail, and return to `tk-implement`; skip §5 and do not end the turn. Full run: append or replace `## Verification` in `plan.md`:
 
 ```markdown
 ## Verification
@@ -70,7 +70,7 @@ run: 2026-10-10 14:02 · fix: no · stale: no
 
 Keep the raw output of any failing command in a fenced block under the table.
 
-## 5. Stop
+## 5. Stop (full run)
 
 - Any `fail` → list them with the R-ids affected and point at `tk-implement`. End the turn.
 - A `human` row that is the acceptance evidence for a **MUST** requirement needs a result before signoff: print the steps, ask the human to run them and report, and record `pass` / `fail` with their evidence. Until then the work is **awaiting human verification**; say so and end the turn without pointing at signoff.
@@ -84,4 +84,4 @@ Keep the raw output of any failing command in a fenced block under the table.
 - [ ] Warnings reported as failures.
 - [ ] Results recorded in `plan.md`, not only in chat.
 - [ ] No code edited beyond formatter and linter autofix under `fix`.
-- [ ] A `phase` / `slice` run wrote only a `checkpoint:` line in `todo.md`, nothing in `plan.md`.
+- [ ] A `phase` / `slice` run wrote only a `checkpoint:` line in `todo.md`, nothing in `plan.md`, and returned to `tk-implement` without ending the turn.

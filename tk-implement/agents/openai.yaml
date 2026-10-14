@@ -1,4 +1,4 @@
 interface:
   display_name: "tk Implement"
-  short_description: "Implement todo.md task by task, pausing at Backend/Frontend boundaries"
-  default_prompt: "Use $tk-implement to work docs/tasks/todo.md in order: verify each task, check it off with evidence, stop after each Backend/Frontend sub-phase unless I say auto, and never run git commands that change state."
+  short_description: "Implement todo.md task by task, to the end or slice by slice, pausing on database changes"
+  default_prompt: "Use $tk-implement to work docs/tasks/todo.md in order: verify each task, check it off with evidence, run to the end (or stop after each slice if I say slice), stop after any sub-phase that changed the database, and never run git commands that change state."

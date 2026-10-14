@@ -22,10 +22,10 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 | Skill | 단계 | 하는 일 |
 |-------|------|---------|
 | [`tk-setup`](tk-setup/) | repo 당 1회 | repo 를 탐색해 `docs/agents/tk-workflow.md` 를 씁니다: 레이아웃, 문서 경로, 모듈 코드, 검증 커맨드, peer. |
-| [`tk-workflow`](tk-workflow/) | 허브 | 파일에서 현재 단계를 유도하고 다음 skill 로 라우팅합니다. `다음` / `수정:` / `auto …` / `리뷰` / `토론` 으로 흐름을 몹니다. |
+| [`tk-workflow`](tk-workflow/) | 허브 | 파일에서 현재 단계를 유도하고 다음 skill 로 라우팅합니다. `다음` / `수정:` / `all` · `slice` / `리뷰` / `토론` 으로 흐름을 몹니다. |
 | [`tk-intent`](tk-intent/) | [0] | `/tk-intent AGENT "제목"` 이 안내 주석이 있는 템플릿으로 `AGENT001-slug.md` 를 만들고, 사람이 초안을 쓰면 `/tk-intent AGENT001` 이 코드와 대조해 읽고 중요한 공백만 묻고, 요구사항에 `R1`, `R2`, … 번호를 붙입니다. |
 | [`tk-plan`](tk-plan/) | [1] | intent 를 `docs/tasks/plan.md` + `todo.md` 로 바꿉니다. 세로 슬라이스, 슬라이스 안은 Backend → Frontend, R-id 커버리지 매트릭스, 미결 결정 0. |
-| [`tk-implement`](tk-implement/) | [2] | `todo.md` 를 순서대로 구현하고 증거와 함께 체크합니다. Backend / Frontend 소단계가 끝날 때마다 `tk-verify phase` 체크포인트를 돌리고 실패는 스스로 고칩니다. 소단계마다 멈추는 `auto` 가 기본이고, `slice` 는 slice 마다, `all` 은 끝까지 갑니다. |
+| [`tk-implement`](tk-implement/) | [2] | `todo.md` 를 순서대로 구현하고 증거와 함께 체크합니다. Backend / Frontend 소단계가 끝날 때마다 `tk-verify phase`, slice 가 끝날 때마다 `tk-verify slice` 체크포인트를 돌리고 실패는 스스로 고칩니다. 기본 `all` 은 끝까지, `slice` 는 slice 마다 멈춥니다. 어느 모드든 DB 를 바꾼 소단계(plan 의 `db: yes`) 뒤에는 멈춥니다. |
 | [`tk-verify`](tk-verify/) | [3] | repo 의 typecheck, lint(warning 도 실패), format 검사, 테스트, plan 의 동작 검증을 실행하고 결과를 R-id 별로 `plan.md` 에 기록합니다. `phase` / `slice` 를 주면 구현 중간의 체크포인트가 됩니다: 같은 명령을 방금 만든 범위에만 돌리고 `todo.md` 에 한 줄 남깁니다. |
 | [`tk-signoff`](tk-signoff/) | [4] | 모든 R-id 를 plan, diff, 검증 결과로 추적합니다. Go / No-Go. Go 면 intent 에 Outcome 추가, 모듈 spec 갱신, `docs/tasks/` 비움. |
 
@@ -53,8 +53,8 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 /tk-intent AGENT001             인터뷰 → 요구사항 R1…Rn
 다음                            → /tk-plan: 슬라이스, 결정, 커버리지
 리뷰                            → codex 와 grok 이 plan.md 를 읽고, 지적은 patch 또는 질문으로
-다음                            → /tk-implement: Slice 1 Backend … 멈춤
-다음                            → Slice 1 Frontend … 멈춤 … (`slice`: slice 마다 멈춤 · `all`: 끝까지)
+다음                            → /tk-implement: Slice 1 Backend (migration) … 멈춤
+다음                            → Slice 1 Frontend → Slice 2 … 끝까지 (`slice`: slice 마다 멈춤)
 다음                            → /tk-verify: tsc · eslint · prettier · tests
 다음                            → /tk-signoff: Go → spec 갱신, tasks 비움
 git commit                      사람이

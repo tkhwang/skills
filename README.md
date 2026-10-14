@@ -22,10 +22,10 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 | Skill | Stage | What it does |
 |-------|-------|--------------|
 | [`tk-setup`](tk-setup/) | once per repo | Explores the repo and writes `docs/agents/tk-workflow.md`: layout, docs paths, module codes, verify commands, peers. |
-| [`tk-workflow`](tk-workflow/) | hub | Derives the current stage from the files, routes to the next skill, and drives the flow with `next` / `revise:` / `auto …` / `review` / `debate`. |
+| [`tk-workflow`](tk-workflow/) | hub | Derives the current stage from the files, routes to the next skill, and drives the flow with `next` / `revise:` / `all` · `slice` / `review` / `debate`. |
 | [`tk-intent`](tk-intent/) | [0] | `/tk-intent AGENT "title"` scaffolds `AGENT001-slug.md` from a guided template; you write the draft; `/tk-intent AGENT001` reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, … |
 | [`tk-plan`](tk-plan/) | [1] | Turns the intent into `docs/tasks/plan.md` + `todo.md`: vertical slices, each Backend → Frontend, with an R-id coverage matrix and no open decisions. |
-| [`tk-implement`](tk-implement/) | [2] | Works `todo.md` in order, checking boxes with evidence. Every Backend / Frontend sub-phase ends with a `tk-verify phase` checkpoint that it fixes itself. Stops after each sub-phase (`auto`, the default), after each slice (`slice`), or at the end (`all`). |
+| [`tk-implement`](tk-implement/) | [2] | Works `todo.md` in order, checking boxes with evidence. Every Backend / Frontend sub-phase ends with a `tk-verify phase` checkpoint (every slice with `tk-verify slice`) that it fixes itself. Runs to the end (`all`, the default) or stops after each slice (`slice`); either way it stops after a sub-phase that changes the database (`db: yes` in the plan). |
 | [`tk-verify`](tk-verify/) | [3] | Runs the repo's typecheck, lint (warnings fail), format check, tests, and the plan's behaviour checks; records results per R-id in `plan.md`. With `phase` / `slice` it is the mid-build checkpoint: same commands, scoped to what was just built, one line in `todo.md`. |
 | [`tk-signoff`](tk-signoff/) | [4] | Traces every R-id through plan, diff, and verification. Go / No-Go. On Go: appends the intent Outcome, updates module specs, empties `docs/tasks/`. |
 
@@ -53,8 +53,8 @@ Other agents join as read-only peers. The orchestrator stays the one agent that 
 /tk-intent AGENT001             interview → requirements R1…Rn
 next                            → /tk-plan: slices, decisions, coverage
 review                          → codex and grok read plan.md; findings patched or asked
-next                            → /tk-implement: Slice 1 Backend … stop
-next                            → Slice 1 Frontend … stop … (`slice`: stop per slice · `all`: run to the end)
+next                            → /tk-implement: Slice 1 Backend (migration) … stop
+next                            → Slice 1 Frontend → Slice 2 … to the end (`slice`: stop per slice)
 next                            → /tk-verify: tsc · eslint · prettier · tests
 next                            → /tk-signoff: Go → specs updated, tasks emptied
 git commit                      yours

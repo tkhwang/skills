@@ -4,7 +4,7 @@ description: "Hub and driver for the tk staged workflow: shows where work stands
 argument-hint: "[status | start [<MODULE> <title> [ko|en]] | next | all | slice]"
 disable-model-invocation: true
 metadata:
-  version: "0.4.0"
+  version: "0.4.1"
 ---
 
 # tk-workflow
@@ -17,7 +17,7 @@ Five stages, state derived from files. One agent drives; peers join for review a
    (permanent)      plan.md,todo.md  checkboxes          ## Verification  specs, empty tasks
 ```
 
-`tk-grill` is the shared interview used by `tk-intent` and `tk-plan`. `tk-setup` writes the per-repo config. `tk-multi-review` and `tk-multi-debate` bring peer agents (claude, codex, grok) in at any gate; they read, the orchestrating agent writes.
+`tk-grill` is the shared interview used by `tk-intent` and `tk-plan`. `tk-intent archive <ID>` takes a dropped intent out of the flow into `archived/`. `tk-setup` writes the per-repo config. `tk-multi-review` and `tk-multi-debate` bring peer agents (claude, codex, grok) in at any gate; they read, the orchestrating agent writes.
 
 ## Config
 
@@ -40,7 +40,7 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 | `## Verification` has a `human` row for a MUST without a result | awaiting human checks | `tk-verify` (record results) |
 | `## Verification` all pass, `stale: no` | verified | `tk-signoff` |
 
-The first matching row from the top wins. "Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `plan.md` frontmatter `intent:` names the active intent (`AGENT001-tenant-export`). Several intents may exist without Outcome; the active one is the one `plan.md` names.
+The first matching row from the top wins. "Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `plan.md` frontmatter `intent:` names the active intent (`AGENT001-tenant-export`). Several intents may exist without Outcome; the active one is the one `plan.md` names. Intents under the intents path's `archived/` folder were dropped with `tk-intent archive` and do not count anywhere in this table or in `status`.
 
 ## Commands
 

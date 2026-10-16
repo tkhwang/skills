@@ -23,7 +23,7 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 |-------|-------|--------------|
 | [`tk-setup`](tk-setup/) | once per repo | Explores the repo and writes `docs/agents/tk-workflow.md`: layout, docs paths, module codes, verify commands, peers. |
 | [`tk-workflow`](tk-workflow/) | hub | Derives the current stage from the files, routes to the next skill, and drives the flow with `next` / `revise:` / `all` · `slice` / `review` / `debate`. |
-| [`tk-intent`](tk-intent/) | [0] | `/tk-intent AGENT "title"` scaffolds `AGENT001-slug.md` from a guided template; you write the draft; `/tk-intent AGENT001` reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, … |
+| [`tk-intent`](tk-intent/) | [0] | `/tk-intent AGENT "title"` scaffolds `AGENT001-slug.md` from a guided template; you write the draft; `/tk-intent AGENT001` reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, …; `/tk-intent archive AGENT001` records why an intent was dropped and moves it to `archived/`. |
 | [`tk-plan`](tk-plan/) | [1] | Turns the intent into `docs/tasks/plan.md` + `todo.md`: vertical slices, each Backend → Frontend, with an R-id coverage matrix and no open decisions. |
 | [`tk-implement`](tk-implement/) | [2] | Works `todo.md` in order, checking boxes with evidence. Every Backend / Frontend sub-phase ends with a `tk-verify phase` checkpoint (every slice with `tk-verify slice`) that it fixes itself. Runs to the end (`all`, the default) or stops after each slice (`slice`); either way it stops after a sub-phase that changes the database (`db: yes` in the plan). |
 | [`tk-verify`](tk-verify/) | [3] | Runs the repo's typecheck, lint (warnings fail), format check, tests, and the plan's behaviour checks; records results per R-id in `plan.md`. With `phase` / `slice` it is the mid-build checkpoint: same commands, scoped to what was just built, one line in `todo.md`. |
@@ -67,6 +67,7 @@ After the first `/tk-workflow` or stage command in a session, the plain words `n
 | Path | Lifetime | Holds |
 |------|----------|-------|
 | `docs/intents/<MODULE><NNN>-<slug>.md` | permanent, one per change | why, what, non-goals, success criteria, `R`-numbered requirements, decision log, outcome |
+| `docs/intents/archived/` | permanent, dropped intents | the intent as it stood when dropped, plus `## Archived` (date, reason, superseding intents); ignored by every stage |
 | `docs/tasks/plan.md` | current work only | decisions, scope, slices, verification plan, R-id coverage, verification results |
 | `docs/tasks/todo.md` | current work only | `## Slice N` → `### Backend` / `### Frontend` → checkbox tasks with evidence |
 | `docs/tasks/reviews/`, `docs/tasks/debates/` | current work only | each peer's prompt and answer, the triage, the debate rounds and synthesis |

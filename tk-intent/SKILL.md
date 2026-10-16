@@ -1,14 +1,16 @@
 ---
 name: tk-intent
-description: "Stage [0] of the tk workflow: scaffold an intent file from the template for the human to write, then strengthen the human-written draft (why, what, non-goals, success criteria, R-id requirements) through a focused interview. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[<MODULE> <title> [ko|en] | <path or MODULE###-slug>]"
+description: "Stage [0] of the tk workflow: scaffold an intent file from the template for the human to write, then strengthen the human-written draft (why, what, non-goals, success criteria, R-id requirements) through a focused interview. With archive, move an intent that was dropped to archived/. Use when the user runs it or tk-workflow routes to it."
+argument-hint: "[<MODULE> <title> [ko|en] | <path or MODULE###-slug> | archive <ID> [reason]]"
 metadata:
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
 # tk-intent
 
 Two visits, one file. First visit: `/tk-intent <MODULE> <title> [ko|en]` (or bare `/tk-intent`, which asks for those three) copies the template to a new intent file and ends the turn; the human writes the draft. Second visit: `/tk-intent <ID>` reads the draft against the codebase, interviews the human about what is missing or ambiguous, and patches the document in place. It never generates an intent from a one-line request.
+
+An intent that was decided and later dropped leaves the workflow with `/tk-intent archive <ID>` (step 7), which moves the file to `archived/`.
 
 ## Config
 
@@ -24,20 +26,22 @@ Read `docs/agents/tk-workflow.md` first (intents path, module codes, document la
 | `docs/{module}/intents/` | AGENT | `docs/agent/intents/AGENT001-tenant-export.md` |
 
 - `MODULE`: uppercase code from the config's Modules table, or from existing intent filenames. Given as an argument, no question. Unknown: show existing codes and ask once (new code → offer to add it to the config).
-- `NNN`: three digits, per module, max existing + 1, scanned in the resolved intents directory for that module.
+- `NNN`: three digits, per module, max existing + 1, scanned in the resolved intents directory for that module, including its `archived/` folder, so an ID is never reused.
 - `slug`: short kebab-case English, derived from the title (translate if the title is not English). A title given as a single kebab-case token (`quote-approval-flow`) is used as the slug verbatim and also as the H1 title. Chosen once, never renamed.
+
+Dropped intents live in `<intents dir>/archived/` under the same filename (`docs/intents/archived/AGENT001-tenant-export.md`). Apart from `NNN` numbering, every lookup of intents in this skill and in the other tk-* skills ignores that folder.
 
 ## Template
 
 `templates/intent.md` (Korean guide comments, the default) and `templates/intent.en.md` (English), next to this `SKILL.md`. Language is chosen in this order: an explicit `ko` / `en` as the last argument → the config's document language if it is `ko` or `en` → `ko`. Placeholders: `{{ID}}`, `{{SLUG}}`, `{{TITLE}}`, `{{DATE}}` (now, UTC ISO 8601 `YYYY-MM-DDTHH:MM:SS.sssZ`, e.g. `2026-10-11T03:38:53.000Z`; fills both `created` and `updated`).
 
-Sections, in order: Background, Goal, Non-goals, Success criteria, Constraints, Requirements (human writes these), then Open questions, Planning hints, Decision Log (this skill and `tk-grill` fill these). Each section opens with an HTML guide comment telling the human what belongs there. `## Outcome` is appended by `tk-signoff` and marks the intent done.
+Sections, in order: Background, Goal, Non-goals, Success criteria, Constraints, Requirements (human writes these), then Open questions, Planning hints, Decision Log (this skill and `tk-grill` fill these). Each section opens with an HTML guide comment telling the human what belongs there. `## Outcome` is appended by `tk-signoff` and marks the intent done. `## Archived` is appended by step 7 just before the file moves.
 
 ## 0. No or partial argument: ask
 
 Bare `/tk-intent`:
 
-1. List intents without `## Outcome` that no `plan.md` names. If there are any, ask first: continue one of them (list them as options) or start a new one. Picking one goes to step 2 (Locate).
+1. List intents without `## Outcome` (outside `archived/`) that no `plan.md` names. If there are any, ask first: continue one of them (list them as options) or start a new one. Picking one goes to step 2 (Locate).
 2. New intent, or no open intents: ask the three fields. One question per field, or one form if the agent has a form tool (Claude Code: `AskUserQuestion`); wait for each answer.
 
 ```text
@@ -52,7 +56,7 @@ Partial argument (`<MODULE>` only, or `<MODULE> <title>` without language): ask 
 
 ## 1. Scaffold (first visit)
 
-Argument is `<MODULE> <title> [ko|en]` (typed, or collected in step 0) and no file with that title's slug exists under the module. The first token is the module code; a last token that is exactly `ko` or `en` is the template language; everything between is the title.
+Argument is `<MODULE> <title> [ko|en]` (typed, or collected in step 0) and no file with that title's slug exists under the module. The first token is the module code (a first token of exactly `archive` goes to step 7 instead); a last token that is exactly `ko` or `en` is the template language; everything between is the title.
 
 ```text
 /tk-intent AGENT 테넌트 데이터 내보내기        → <intents path>/AGENT001-tenant-export.md, Korean template
@@ -69,6 +73,7 @@ Done when the file exists and the human has the path.
 ## 2. Locate (second visit)
 
 - Argument is a path, `MODULE###-slug`, or a bare `MODULE###` that matches exactly one file → open that file.
+- The only match is under `archived/` → say it is archived, quote its `## Archived` entry, and end the turn. To revive it, the human moves the file back and deletes `## Archived`.
 - Pasted draft in chat → save it to the computed filename first (frontmatter from the template, body as pasted), then continue.
 - No argument → handled in step 0 (continue an open intent, or ask module / title / language for a new one).
 
@@ -101,6 +106,26 @@ Done when every requirement has an R-id and an acceptance criterion, the documen
 
 Print a five-line summary (goal, R-id count, non-goals, open questions, path) and the next command (`/tk-plan` or `다음`; `리뷰` to have peers read it first). End the turn.
 
+## 7. Archive
+
+`/tk-intent archive <ID> [reason]` takes an intent that was decided and then dropped (requirements changed, replaced by other intents, no longer wanted) out of the workflow. Bare `/tk-intent archive` lists the intents without `## Outcome` and asks which one.
+
+1. **Locate** the intent as in step 2. One that has `## Outcome` shipped: refuse, since its record stays where it is; removing what it built is a new intent.
+2. **Reason**: the rest of the argument, else ask once. Intent IDs that replace it (`AGENT004`) go on their own `superseded by` line.
+3. **Active intent**: if `plan.md` frontmatter `intent:` names it, show what will be discarded (checked / total boxes in `todo.md`, whether `## Verification` exists) and ask once. Yes → empty the working files the way `tk-signoff` does: placeholder `plan.md` and `todo.md`, contents of `docs/tasks/reviews/` and `docs/tasks/debates/` deleted. No → end the turn with nothing changed. Code already changed stays; reverting it is the human's, with git.
+4. **Record**: append the section below and set frontmatter `updated`. Leave out the `superseded by` line when nothing replaces it. Change nothing else in the document.
+
+   ```markdown
+   ## Archived
+   - 2026-10-16T03:38:53.000Z · <reason>
+   - superseded by: AGENT004, AGENT005
+   ```
+
+5. **Move** the file to `<intents dir>/archived/` under the same filename, creating the folder if needed. Use `mv`, not `git mv`; git stays read-only.
+6. **Stop**: print old → new path, whether `docs/tasks/` was emptied, and the files ready to commit. End the turn.
+
+Done when the file is under `archived/` with an `## Archived` entry and no `plan.md` names it.
+
 ## Verification
 
 - [ ] Bare `/tk-intent` asked module, title, language (one at a time or one form) and did not guess any of them.
@@ -110,3 +135,5 @@ Print a five-line summary (goal, R-id count, non-goals, open questions, path) an
 - [ ] No file paths, library choices, or schemas outside Planning hints.
 - [ ] No guide comments left in the finalized document.
 - [ ] Turn ended after the summary; `tk-plan` was not started.
+- [ ] `archive` refused an intent with `## Outcome`, appended `## Archived` with a reason, moved the file under `archived/`, and emptied `docs/tasks/` only after the human confirmed for the active intent.
+- [ ] `NNN` numbering counted `archived/`; every other intent lookup ignored it.

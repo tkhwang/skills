@@ -4,7 +4,7 @@ description: "Hub and driver for the tk staged workflow: shows where work stands
 argument-hint: "[status | start [<MODULE> <title> [ko|en]] | next | all | slice]"
 disable-model-invocation: true
 metadata:
-  version: "0.4.1"
+  version: "0.5.0"
 ---
 
 # tk-workflow
@@ -35,10 +35,11 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 | `plan.md` filled, 0 boxes checked in `todo.md` | plan written | `tk-implement` (`next` is the approval; asks when invoked directly) |
 | some boxes checked | implementing | `tk-implement` continues |
 | all boxes checked, no `## Verification` in `plan.md` | implemented | `tk-verify` |
-| `## Verification` has a failing row, `stale: no` | verify failed | `tk-implement` (fixes) |
+| `## Verification` has a row whose result is `fail` (commands, behaviour checks, or `### Audit`), `stale: no` | verify failed | `tk-implement` (fixes) |
 | `## Verification` has `stale: yes` (code changed after the run) | re-verify | `tk-verify` |
 | `## Verification` has a `human` row for a MUST without a result | awaiting human checks | `tk-verify` (record results) |
-| `## Verification` all pass, `stale: no` | verified | `tk-signoff` |
+| `## Verification` has no `### Audit` (recorded before audits existed) | re-verify | `tk-verify` |
+| `## Verification` with `### Audit`, no `fail` row, `stale: no` (`note`, `discovered`, `rejected` do not block) | verified | `tk-signoff` |
 
 The first matching row from the top wins. "Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `plan.md` frontmatter `intent:` names the active intent (`AGENT001-tenant-export`). Several intents may exist without Outcome; the active one is the one `plan.md` names. Intents under the intents path's `archived/` folder were dropped with `tk-intent archive` and do not count anywhere in this table or in `status`.
 
@@ -59,6 +60,7 @@ Once this skill has run in a session, plain keywords continue the flow without r
 | `다음` / `next` / `go` | Treat the current artifact as approved; invoke the next stage |
 | `수정: …` / `revise: …` | Patch the current stage's artifact as asked; wait for approval again |
 | `all` / `slice` | Run `tk-implement` to the end (`all`, the default) or stopping after each slice (`slice`). Either mode stops after a sub-phase that changed the database, and checkpoints every sub-phase and slice. The mode is written to `todo.md`, so `다음` resumes in it |
+| `검증 [peer…]` / `verify [peer…]` | Once every box in `todo.md` is checked: run `tk-verify` as the full stage, with each named peer auditing independently; without names the current agent audits alone |
 | `리뷰 [stage] [peer…]` / `review …` | Run `tk-multi-review` on the artifact awaiting approval; the artifact stays unapproved |
 | `토론 <Q<n> or sentence>` / `debate …` | Run `tk-multi-debate` on an open decision; the answer still comes from the human via `tk-grill` |
 | `상태` / `status` | Re-derive state from files and report |
@@ -68,13 +70,14 @@ Approval is explicit. "알아서 해" and "whatever you think" are delegation: o
 
 ## Conventions every tk-* skill follows
 
+- **Ask for quality, then audit it.** `tk-plan` aims for the better design, not the minimal change: it compares the current structure with current best practice, cites its sources, and writes a checkable Quality bar. `tk-implement` builds to that bar completely and cleans up at every boundary. `tk-verify` takes no checkbox, no "done" and no green run on trust: it opens the code and the tests, alone or with peers.
 - **Turn boundary.** A stage saves its artifact, prints a short summary and the next command, and ends the turn. One stage per turn. A checkpoint a stage invokes mid-run (`tk-implement` → `tk-verify phase` / `slice`) belongs to that stage's turn and does not end it.
 - **Approval lives in conversation**, checked by the next stage at its start, never stored in files. `다음` / `next` **is** the approval: a stage entered through the driver does not ask "shall I start?" again; a stage invoked directly by its slash command does.
 - **One active work item.** Parallel work uses git worktrees, which gives each its own `plan.md`.
 - **git is read-only for the agent**: `status`, `diff`, `log`. Commits, pushes, stashes, checkouts are the human's.
 - **Commands come from the repo** (config, `package.json`, CI). Run a command again only after code changed.
 - **Language**: talk to the user in the config's conversation language; write documents in the config's document language; keep code, identifiers and commands untranslated.
-- **Peers are read-only.** `tk-multi-*` run other agents headless in their own processes; their output is a file under `docs/tasks/reviews/` or `docs/tasks/debates/`. Only the orchestrating agent edits documents or code.
+- **Peers are read-only.** `tk-multi-*` and `tk-verify <peer…>` run other agents headless in their own processes; their output is a file under `docs/tasks/reviews/` or `docs/tasks/debates/`. Only the orchestrating agent edits documents or code.
 - **Repo conventions win.** If the repo already lays docs out differently, follow it via `tk-setup` config.
 
 ## Verification

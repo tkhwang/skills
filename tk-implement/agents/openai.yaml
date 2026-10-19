@@ -1,4 +1,4 @@
 interface:
   display_name: "tk Implement"
-  short_description: "Implement todo.md task by task, to the end or slice by slice, pausing on database changes"
-  default_prompt: "Use $tk-implement to work docs/tasks/todo.md in order: verify each task, check it off with evidence, run to the end (or stop after each slice if I say slice), stop after any sub-phase that changed the database, and never run git commands that change state."
+  short_description: "Implement todo.md completely to the plan's Quality bar, cleaning up at every boundary, pausing on database changes"
+  default_prompt: "Use $tk-implement to work docs/tasks/todo.md in order: build each task completely in the plan's design and to its Quality bar (error paths and edge cases included), verify it, check it off with evidence, clean up before every checkpoint, run to the end (or stop after each slice if I say slice), stop after any sub-phase that changed the database, and never run git commands that change state."

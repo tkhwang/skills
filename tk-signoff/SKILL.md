@@ -2,7 +2,7 @@
 name: tk-signoff
 description: "Stage [4] of the tk workflow: trace every requirement through plan, code, tests and verification, decide Go / No-Go, and on Go update the intent Outcome and module specs and empty docs/tasks. Use when the user runs it or tk-workflow routes to it."
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # tk-signoff
@@ -15,11 +15,11 @@ Read `docs/agents/tk-workflow.md` first (specs path, module codes). If missing, 
 
 ## 1. Preconditions
 
-`plan.md` has `## Verification` with `stale: no`, no `fail` row, and a recorded result for every `human` row that backs a MUST requirement. Otherwise point at `tk-verify`.
+`plan.md` has `## Verification` with `stale: no`, a `### Audit` section, no row whose result is `fail` in any of its tables (commands, behaviour checks, audit), and a recorded result for every `human` row that backs a MUST requirement. A record without `### Audit` predates audits or skipped them. Otherwise point at `tk-verify`.
 
 ## 2. Trace
 
-Read the intent, `plan.md`, `todo.md`, and `git diff` (read-only; ask for the base ref if unclear). Build:
+Read the intent, `plan.md`, `todo.md`, and the change as `tk-verify` §1 defines it (`git diff` against the `base:` line in `todo.md`, plus untracked files; read-only). Build:
 
 | R-id | tasks | files / tests | verification | status |
 |---|---|---|---|---|
@@ -28,13 +28,14 @@ Then check:
 
 - **Scope creep**: changed files that no task cites. Each is either justified (Slice 0 prefactor, Discovered follow-up explicitly accepted) or a finding.
 - **Drift**: places where the implementation differs from the intent or from plan decisions.
-- **Leftovers**: Discovered items, human checks still open, SHOULD requirements not delivered, review findings triaged `deferred` under `docs/tasks/reviews/`.
+- **Audit**: the `### Audit` ledger has a row for every task in `todo.md`, every R-id in the intent, and every Quality bar line; every task is `done`, every R-id `complete`, every Quality bar line `met`, and no test `hollow`. Compare the ledger with the files, not with its own summary line. `Quality bar: none` is reported as such.
+- **Leftovers**: Discovered items, human checks still open, SHOULD requirements not delivered, review findings triaged `deferred` and audit findings marked `discovered` under `docs/tasks/reviews/`.
 
 ## 3. Verdict
 
 - **Go**: every MUST traced and verified, no unexplained change.
 - **Go with follow-ups**: as Go, plus listed deferred items.
-- **No-Go**: a MUST untraced, a drift that changes behaviour, or unexplained scope. Report, leave `docs/tasks/` untouched, point at the stage that fixes it. End the turn.
+- **No-Go**: a MUST untraced, a drift that changes behaviour, unexplained scope, or an audit ledger with a missing item or a result short of `done` / `complete` / `met` / not `hollow`. Report, leave `docs/tasks/` untouched, point at the stage that fixes it. End the turn.
 
 ## 4. On Go: update permanent documents
 

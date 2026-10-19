@@ -3,7 +3,7 @@ name: tk-multi-review
 description: "Have peer agents (claude, codex, grok) review the current tk stage's artifact: intent, plan, implementation diff, or verification record. Collects each review as a file, triages findings into patches or tk-grill questions. Use when the user asks for a peer or multi-agent review of a stage, or the driver receives 리뷰 / review."
 argument-hint: "[intent | plan | implement | verify | <path>] [peer…]"
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # tk-multi-review
@@ -22,9 +22,11 @@ The argument names the stage or a path. No argument → derive the stage from th
 |---|---|---|
 | `intent` | the active intent | specs of the modules it names |
 | `plan` | `plan.md`, `todo.md` | the intent |
-| `implement` | `git diff <base>` (ask for the base ref if unclear) | `todo.md`, `plan.md`, the intent |
+| `implement` | the change as `tk-verify` §1 defines it: `git diff` against the `base:` line in `todo.md`, plus untracked files | `todo.md`, `plan.md`, the intent |
 | `verify` | `plan.md` `## Verification` | `todo.md`, the raw outputs it cites |
 | `<path>` | that file | documents it links |
+
+`verify` here reviews the verification record. For peers to audit the finished work itself, run `tk-verify <peer…>`, which reuses §4 below with its own audit prompt.
 
 Done when the artifact paths and the rubric row are fixed.
 
@@ -33,9 +35,9 @@ Done when the artifact paths and the rubric row are fixed.
 | Stage | Peer looks for |
 |---|---|
 | intent | success criteria that cannot be observed, missing non-goals, requirements that contradict each other or the code, implementation detail posing as requirement, several capabilities bundled in one intent |
-| plan | R-ids with no task or tasks with no R-id, slices that are not independently demoable, decisions still open, paths or contracts that conflict with specs, hidden migrations or authz gaps, risks missing from the table |
-| implement | changes no task cites, drift from plan decisions, missing or ceremonial tests, error paths and edge cases, security or data-loss hazards, evidence claimed in `todo.md` that the diff does not support |
-| verify | commands not traceable to repo config, warnings passed as success, behaviour checks that do not prove their R-id, `human` rows that could have been automated |
+| plan | R-ids with no task or tasks with no R-id, slices that are not independently demoable, decisions still open, paths or contracts that conflict with specs, hidden migrations or authz gaps, risks missing from the table, a minimal patch where the structure itself is the problem, structural proposals with no reference or no problem to remove, Quality bar lines that cannot be checked against a diff |
+| implement | changes no task cites, drift from plan decisions, work below the Quality bar (happy path only, a structure the plan replaced still in use), missing or ceremonial tests, error paths and edge cases, security or data-loss hazards, leftovers cleanup missed, evidence claimed in `todo.md` that the diff does not support |
+| verify | commands not traceable to repo config, warnings passed as success, behaviour checks that do not prove their R-id, `human` rows that could have been automated, audit rows marked `done` or `sound` without `file:line` evidence, peer findings counted without being checked in the repo |
 
 ## 3. Prompt
 
@@ -88,7 +90,7 @@ Done when every peer has a result file.
 
 Read every result file. For each finding, decide and append a `## Triage` list to that result file (`- <finding> → accepted | asked | deferred | rejected: <why>`):
 
-- **accepted**: the artifact states something the repo contradicts, or omits something the rubric requires → patch the artifact now, with the same care as a `revise:` request (keep the human's wording, patch do not rewrite). At the `implement` stage the artifact is a diff, so the patch goes to the source files the finding names, inside the plan's scope and the task's files: fix, re-run that task's `verify:` command, update its evidence in `todo.md`. A fix that would widen scope is `deferred` or `asked`, not applied.
+- **accepted**: the artifact states something the repo contradicts, or omits something the rubric requires → patch the artifact now, with the same care as a `revise:` request (keep the human's wording, patch do not rewrite). At the `implement` stage the artifact is a diff, so the patch goes to the source files the finding names, inside the plan's scope and the task's files: fix, re-run that task's `verify:` command, update its evidence in `todo.md`. A fix that would widen scope is `deferred` or `asked`, not applied. A finding that proposes a different design or structure (a better pattern, a Design direction change, replacing a minimal patch) is a decision: `asked`, never `accepted`.
 - **asked**: a decision → add it as `open:` to the artifact's `## Decision Log` (intent: `## Open questions`) and invoke `tk-grill` on the artifact after triage.
 - **deferred**: real but outside this stage or this intent → `plan.md` `## Discovered` (or the intent's `## Open questions`) as `NOTICED, NOT TOUCHED`.
 - **rejected**: wrong or already handled → say why in one sentence. Rejecting a `blocker` requires evidence from the repo.

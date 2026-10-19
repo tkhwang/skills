@@ -4,8 +4,12 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 
 [English](README.md) | **한글**
 
+> **방향은 내가, 보강은 AI가. 맡기고, 함께 검증합니다.**
+>
+> 방향은 내 의도와 취향으로 정하고, agent 는 코드와 업계 best practice 에 비추어 이를 보강합니다(intent, plan). 그다음 구현을 맡기고(implement), 결과를 함께 검증합니다(verify, signoff).
+
 <p align="center">
-  <img src="./assets/readme/tk-workflow.ko.svg" width="100%" alt="tk workflow: intent, plan, implement, verify, signoff 다섯 단계가 왼쪽에서 오른쪽으로 진행되고, 단계 사이마다 사람이 승인한다. agent 하나로 돌고, 다른 agent 는 리뷰와 토론에 들어온다. intent 는 영구 문서, tasks 는 작업 단위 문서, specs 는 현재 동작을 기술한다">
+  <img src="./assets/readme/tk-workflow.ko.svg" width="100%" alt="tk workflow: intent, plan, implement, verify, signoff 다섯 단계가 왼쪽에서 오른쪽으로 진행되고, 단계 사이마다 사람이 승인한다. 방향은 내가 정하고 AI가 보강하며(intent, plan), 구현은 맡기고(implement), 결과는 함께 검증한다(verify, signoff). agent 하나로 돌고, 다른 agent 는 리뷰와 토론에 들어온다. intent 는 영구 문서, tasks 는 작업 단위 문서, specs 는 현재 동작을 기술한다">
 </p>
 
 ## 무엇인가

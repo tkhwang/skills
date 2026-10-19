@@ -12,6 +12,7 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 
 - **Files are the state.** Each stage reads a document and writes a document. Where work stands is derived from `docs/`, never from conversation memory, so any session can pick it up.
 - **A human gate at every stage.** A stage saves its artifact, prints a summary, and ends the turn. The next stage starts only on an explicit "next".
+- **Quality is asked for, then audited.** The plan aims for the better design, not the smallest patch: it compares the current structure with current best practice, cites its sources, and writes a checkable Quality bar. Implementation builds to that bar and cleans up as it goes. Verification takes no checkbox or green run on trust: it opens the code and reads the tests, alone or with peer agents auditing independently.
 - **Multi-agent review and debate.** The flow runs with one agent. Say `review` or `debate` and other agents (claude, codex, grok) read the artifact or argue a decision, read-only; their answers land in files, and one agent still does all the editing.
 - **The agent never commits.** It reads git, it does not write it. Commits, pushes, and branches are yours.
 
@@ -22,11 +23,11 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 | Skill | Stage | What it does |
 |-------|-------|--------------|
 | [`tk-setup`](tk-setup/) | once per repo | Explores the repo and writes `docs/agents/tk-workflow.md`: layout, docs paths, module codes, verify commands, peers. |
-| [`tk-workflow`](tk-workflow/) | hub | Derives the current stage from the files, routes to the next skill, and drives the flow with `next` / `revise:` / `all` · `slice` / `review` / `debate`. |
+| [`tk-workflow`](tk-workflow/) | hub | Derives the current stage from the files, routes to the next skill, and drives the flow with `next` / `revise:` / `all` · `slice` / `verify` / `review` / `debate`. |
 | [`tk-intent`](tk-intent/) | [0] | `/tk-intent AGENT "title"` scaffolds `AGENT001-slug.md` from a guided template; you write the draft; `/tk-intent AGENT001` reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, …; `/tk-intent archive AGENT001` records why an intent was dropped and moves it to `archived/`. |
-| [`tk-plan`](tk-plan/) | [1] | Turns the intent into `docs/tasks/plan.md` + `todo.md`: vertical slices, each Backend → Frontend, with an R-id coverage matrix and no open decisions. |
-| [`tk-implement`](tk-implement/) | [2] | Works `todo.md` in order, checking boxes with evidence. Every Backend / Frontend sub-phase ends with a `tk-verify phase` checkpoint (every slice with `tk-verify slice`) that it fixes itself. Runs to the end (`all`, the default) or stops after each slice (`slice`); either way it stops after a sub-phase that changes the database (`db: yes` in the plan). |
-| [`tk-verify`](tk-verify/) | [3] | Runs the repo's typecheck, lint (warnings fail), format check, tests, and the plan's behaviour checks; records results per R-id in `plan.md`. With `phase` / `slice` it is the mid-build checkpoint: same commands, scoped to what was just built, one line in `todo.md`. |
+| [`tk-plan`](tk-plan/) | [1] | Turns the intent into `docs/tasks/plan.md` + `todo.md`. Researches current best practice and plans the better design rather than the minimal patch (Design direction, with references), writes a checkable Quality bar, and cuts vertical slices, each Backend → Frontend, with an R-id coverage matrix and no open decisions. |
+| [`tk-implement`](tk-implement/) | [2] | Works `todo.md` in order, building each task completely to the Quality bar and checking boxes with evidence. Every Backend / Frontend sub-phase ends with a cleanup pass and a `tk-verify phase` checkpoint (every slice with `tk-verify slice`) that it fixes itself. Runs to the end (`all`, the default) or stops after each slice (`slice`); either way it stops after a sub-phase that changes the database (`db: yes` in the plan). |
+| [`tk-verify`](tk-verify/) | [3] | Runs the repo's typecheck, lint (warnings fail), format check, tests, and the plan's behaviour checks, then audits the work itself: every task and R-id in the code, what each test really asserts (hardcoded values, mocked subjects, skipped tests), the Quality bar, and leftover mess. `/tk-verify codex grok` adds independent peer audits whose findings are confirmed in the repo before they count. Records results per R-id in `plan.md`. With `phase` / `slice` it is the mid-build checkpoint: same commands, scoped to what was just built, a checkpoint line in `todo.md` (`slice` also audits that slice and adds the result). |
 | [`tk-signoff`](tk-signoff/) | [4] | Traces every R-id through plan, diff, and verification. Go / No-Go. On Go: appends the intent Outcome, updates module specs, empties `docs/tasks/`. |
 
 ### Single agent · other
@@ -51,16 +52,16 @@ Other agents join as read-only peers. The orchestrator stays the one agent that 
 /tk-intent AGENT Tenant export  scaffold docs/intents/AGENT001-tenant-export.md (Korean template; append `en` for English)
 (you fill in the draft)
 /tk-intent AGENT001             interview → requirements R1…Rn
-next                            → /tk-plan: slices, decisions, coverage
+next                            → /tk-plan: design direction, Quality bar, slices, decisions, coverage
 review                          → codex and grok read plan.md; findings patched or asked
 next                            → /tk-implement: Slice 1 Backend (migration) … stop
-next                            → Slice 1 Frontend → Slice 2 … to the end (`slice`: stop per slice)
-next                            → /tk-verify: tsc · eslint · prettier · tests
+next                            → Slice 1 Frontend → Slice 2 … to the end, cleaning up at every boundary (`slice`: stop per slice)
+verify codex grok               → /tk-verify: tsc · eslint · prettier · tests, then audit by this agent + codex + grok (`next`: this agent alone)
 next                            → /tk-signoff: Go → specs updated, tasks emptied
 git commit                      yours
 ```
 
-After the first `/tk-workflow` or stage command in a session, the plain words `next`, `revise: …`, `slice`, `all`, `review`, `debate`, `status`, and `stop` keep the flow moving. Hedged answers ("looks fine") are not approval; the driver asks again.
+After the first `/tk-workflow` or stage command in a session, the plain words `next`, `revise: …`, `slice`, `all`, `verify`, `review`, `debate`, `status`, and `stop` keep the flow moving. Hedged answers ("looks fine") are not approval; the driver asks again.
 
 ## Documents
 
@@ -68,17 +69,17 @@ After the first `/tk-workflow` or stage command in a session, the plain words `n
 |------|----------|-------|
 | `docs/intents/<MODULE><NNN>-<slug>.md` | permanent, one per change | why, what, non-goals, success criteria, `R`-numbered requirements, decision log, outcome |
 | `docs/intents/archived/` | permanent, dropped intents | the intent as it stood when dropped, plus `## Archived` (date, reason, superseding intents); ignored by every stage |
-| `docs/tasks/plan.md` | current work only | decisions, scope, slices, verification plan, R-id coverage, verification results |
-| `docs/tasks/todo.md` | current work only | `## Slice N` → `### Backend` / `### Frontend` → checkbox tasks with evidence |
-| `docs/tasks/reviews/`, `docs/tasks/debates/` | current work only | each peer's prompt and answer, the triage, the debate rounds and synthesis |
+| `docs/tasks/plan.md` | current work only | design direction, decisions, Quality bar, scope, slices, verification plan, R-id coverage, verification results and audit |
+| `docs/tasks/todo.md` | current work only | `## Slice N` → `### Backend` / `### Frontend` → checkbox tasks with evidence, `cleanup:` and `checkpoint:` lines |
+| `docs/tasks/reviews/`, `docs/tasks/debates/` | current work only | each peer's prompt and answer (reviews and verify audits), the triage, the debate rounds and synthesis |
 | `docs/specs/<module>/` | permanent | how each module behaves now, written in timeless language |
 | `docs/agents/tk-workflow.md` | per repo | the configuration `tk-setup` writes |
 
-`plan.md`, `todo.md`, `reviews/` and `debates/` are overwritten per piece of work and emptied at signoff; git history is the archive. Repos that already lay docs out differently keep their layout through `tk-setup`.
+`plan.md`, `todo.md`, `reviews/` and `debates/` are overwritten per piece of work and emptied at signoff; git history is the archive, so signoff asks before emptying files you have not committed, and the intent's Outcome keeps the verification and audit summary. Repos that already lay docs out differently keep their layout through `tk-setup`.
 
 ## Peer agents
 
-`tk-multi-review` and `tk-multi-debate` run other agents **headless, read-only, one process each**: `claude -p`, `codex exec -s read-only`, `grok -p`. The prompt is a self-contained file, the answer is a file, and only the orchestrating agent edits anything. Which agents take part is a `## Peers` table that `tk-setup` writes from what is installed. Inside [herdr](https://herdr.dev) the same commands run in a sibling pane so you can watch; outside herdr they run directly. Nothing else changes.
+`tk-multi-review`, `tk-multi-debate` and `tk-verify <peer…>` run other agents **headless, read-only, one process each**: `claude -p`, `codex exec -s read-only`, `grok -p`. The prompt is a self-contained file, the answer is a file, and only the orchestrating agent edits anything. Which agents review and debate is a `## Peers` table that `tk-setup` writes from what is installed; `tk-verify` audits with exactly the peers you name. Inside [herdr](https://herdr.dev) the same commands run in a sibling pane so you can watch; outside herdr they run directly. Nothing else changes.
 
 ## Install
 

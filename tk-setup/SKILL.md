@@ -4,7 +4,7 @@ description: "Configure a repo for the tk-* workflow skills: layout, docs paths,
 argument-hint: "[optional notes about the repo]"
 disable-model-invocation: true
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # tk-setup
@@ -20,7 +20,7 @@ Read before asking. Collect:
 - **Commands**: each package's scripts for typecheck, lint, format, test; checked-in wrappers; CI workflows under `.github/workflows/` and what they actually run. CI is the source of truth for what gates merges.
 - **Existing docs**: `docs/` tree; any `intents/`, `specs/`, `tasks/`, `plans/` folders, possibly nested as `docs/<module>/…`; existing intent filenames and their module codes (`AGENT001-…` → `AGENT`).
 - **Existing agent config**: `CLAUDE.md`, `AGENTS.md`, an `## Agent skills` block, `docs/agents/*.md` from other skill sets.
-- **Peer agents**: which of `claude`, `codex`, `grok` are on `PATH` (`command -v`), and whether this session runs inside herdr (`HERDR_ENV=1`). These feed `## Peers` for `tk-multi-review` / `tk-multi-debate`.
+- **Peer agents**: which of `claude`, `codex`, `grok` are on `PATH` (`command -v`), and whether this session runs inside herdr (`HERDR_ENV=1`). These feed `## Peers` for `tk-multi-review` / `tk-multi-debate`, and the names and command overrides `tk-verify <peer…>` uses.
 
 Done when you can fill every section of the config template below with either a discovered value or a clearly marked question.
 

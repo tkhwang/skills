@@ -22,7 +22,7 @@ The argument names the stage or a path. No argument → derive the stage from th
 |---|---|---|
 | `intent` | the active intent | specs of the modules it names |
 | `plan` | `plan.md`, `todo.md` | the intent |
-| `implement` | the change as `tk-verify` §1 defines it: `git diff` against the `base:` line in `todo.md`, plus untracked files | `todo.md`, `plan.md`, the intent |
+| `implement` | the change as `tk-verify` §1 defines it: per repository, `git diff` against its `base:` entry in `todo.md` plus untracked files | `todo.md`, `plan.md`, the intent |
 | `verify` | `plan.md` `## Verification` | `todo.md`, the raw outputs it cites |
 | `<path>` | that file | documents it links |
 

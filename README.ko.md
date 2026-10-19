@@ -75,7 +75,7 @@ git commit                      사람이
 | `docs/specs/<module>/` | 영구 | 각 모듈이 지금 어떻게 동작하는지, 시제 없는 문장으로 |
 | `docs/agents/tk-workflow.md` | repo 당 | `tk-setup` 이 쓰는 설정 |
 
-`plan.md`, `todo.md`, `reviews/`, `debates/` 는 작업마다 덮어쓰고 signoff 때 비웁니다. 이력은 git 이 보관합니다. 이미 다른 문서 레이아웃을 쓰는 repo 는 `tk-setup` 으로 그 레이아웃을 그대로 씁니다.
+`plan.md`, `todo.md`, `reviews/`, `debates/` 는 작업마다 덮어쓰고 signoff 때 비웁니다. 이력은 git 이 보관하므로, commit 하지 않은 파일이 있으면 signoff 가 비우기 전에 묻고, 검증과 감사 요약은 intent 의 Outcome 에 남깁니다. 이미 다른 문서 레이아웃을 쓰는 repo 는 `tk-setup` 으로 그 레이아웃을 그대로 씁니다.
 
 ## Peer agent
 

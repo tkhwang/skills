@@ -23,8 +23,8 @@ Read `docs/agents/tk-workflow.md` first (packages and their paths, verify comman
 - `plan.md` Decision Log shows no open decision; otherwise stop and point at `tk-grill`.
 - `plan.md` has a `## Quality bar`. A plan written without one: offer to add it through `tk-plan` (a revision; recommended), or to write it now from the repo's own conventions, each line naming the file that shows the convention, and confirm it with the human before the first task. Either way the bar is in `plan.md` before code is written.
 - If no box is checked yet: entered through the driver's `다음` / `next`, that keyword is the approval; invoked directly, ask "이 plan 으로 구현을 시작할까요?" and wait for an explicit yes.
-- Run `git status --porcelain`. Report uncommitted changes outside `docs/` in one line and ask whether to proceed. Inform only; the human owns commits.
-- If no box is checked yet, write `base: <output of git rev-parse HEAD>` on the line after `mode:` in `todo.md`. It fixes what "the change" means for `tk-verify`, `tk-signoff` and `tk-multi-review` (`tk-verify` §1); keep it until signoff.
+- Run `git status --porcelain` in each repository in scope (each package path's repository and the docs home's). Report uncommitted changes outside `docs/` in one line and ask whether to proceed. Inform only; the human owns commits.
+- If no box is checked yet, write the `base:` line after `mode:` in `todo.md`: the `git rev-parse HEAD` of every repository in scope, in the format `tk-verify` §1 defines. It fixes what "the change" means for `tk-verify`, `tk-signoff` and `tk-multi-review`; keep it until signoff.
 
 Done when approval is explicit and the starting point is known.
 
@@ -98,7 +98,7 @@ The DB gate is separate: it lets the sub-phase finish and pass its checkpoint, t
 
 ## 6. Done
 
-When every box is checked, do a final cleanup pass over the whole change (as `tk-verify` §1 defines it: `git diff` against the `base:` line, plus untracked files): duplication across slices, leftovers from earlier sub-phases, files no task cites. Re-run the `verify:` command of any task whose code changed, and record `cleanup (final): <what changed, or "nothing to clean"> · YYYY-MM-DD HH:MM` at the end of `todo.md`.
+When every box is checked, do a final cleanup pass over the whole change (as `tk-verify` §1 defines it: per repository, `git diff` against its `base:` entry plus untracked files): duplication across slices, leftovers from earlier sub-phases, files no task cites. Re-run the `verify:` command of any task whose code changed, and record `cleanup (final): <what changed, or "nothing to clean"> · YYYY-MM-DD HH:MM` at the end of `todo.md`.
 
 Then: summary of tasks, evidence, files changed, cleanup, Discovered items. Print the next command (`/tk-verify` or `다음`; `/tk-verify codex grok` or `검증 codex grok` to add independent peer audits; `리뷰` to have peers review the diff first). End the turn.
 

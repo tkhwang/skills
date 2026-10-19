@@ -75,7 +75,7 @@ After the first `/tk-workflow` or stage command in a session, the plain words `n
 | `docs/specs/<module>/` | permanent | how each module behaves now, written in timeless language |
 | `docs/agents/tk-workflow.md` | per repo | the configuration `tk-setup` writes |
 
-`plan.md`, `todo.md`, `reviews/` and `debates/` are overwritten per piece of work and emptied at signoff; git history is the archive. Repos that already lay docs out differently keep their layout through `tk-setup`.
+`plan.md`, `todo.md`, `reviews/` and `debates/` are overwritten per piece of work and emptied at signoff; git history is the archive, so signoff asks before emptying files you have not committed, and the intent's Outcome keeps the verification and audit summary. Repos that already lay docs out differently keep their layout through `tk-setup`.
 
 ## Peer agents
 

@@ -30,7 +30,7 @@ Read `docs/agents/tk-workflow.md` first: the Verify table per package, the tasks
 
 Full scope: every box in `todo.md` is checked; otherwise list the unchecked tasks and point at `tk-implement`. `phase` / `slice`: every box of that sub-phase or slice is checked. A checked box means the work is ready to audit; §5 decides whether it is done.
 
-**The change** under audit is `git diff <base>` plus the untracked files (`git ls-files --others --exclude-standard`). `<base>` is the `base:` line `tk-implement` writes in `todo.md` when work starts. Without that line, it is the merge-base of `HEAD` and the default branch (`git symbolic-ref --short refs/remotes/origin/HEAD`); ask once if neither resolves. `tk-implement`, `tk-signoff` and `tk-multi-review` use the same definition. A scoped run narrows the change to the files its tasks list and the untracked files beside them.
+**The change** under audit is collected per repository in scope: every distinct git repository among the config's package paths and the docs home (`git -C <path> rev-parse --show-toplevel`). In each one it is `git diff <base>` plus its untracked files (`git ls-files --others --exclude-standard`). `<base>` is that repository's entry on the `base:` line `tk-implement` writes in `todo.md` when work starts: `base: <sha>` for a single repository, `base: <repo path>@<sha> · <repo path>@<sha>` for several, paths relative to the docs home. A repository without an entry falls back to the merge-base of its `HEAD` and its default branch (`git symbolic-ref --short refs/remotes/origin/HEAD`); ask once if that does not resolve. `tk-implement`, `tk-signoff` and `tk-multi-review` use this same definition. A scoped run narrows the change to the files its tasks list and the untracked files beside them.
 
 ## 2. Discover commands
 
@@ -47,7 +47,7 @@ Peers take the longest, so they launch early and work while §4 and §5 proceed.
 - **Launch**: commands, override rules and placement exactly as `tk-multi-review` §4 (default command per kind, a `command` override only if it keeps the kind's read-only flag, a sibling pane per peer inside herdr, directly elsewhere), all peers concurrently, 10-minute timeout each. This section only launches; §6 waits for the processes to exit. Result: `<tasks>/reviews/audit-<peer>.md`, with a header prepended once the process exits: `reviewer: <peer> · stage: audit · run: YYYY-MM-DD HH:MM · artifact: git diff <base> · command: default | override`.
 
 ```markdown
-You are auditing finished work, read-only, inside the repository at <abs repo path>.
+You are auditing finished work, read-only, inside the workspace at <abs docs home path>.
 Do not edit any file. Do not run tests or builds; the orchestrator runs every command.
 Answer in <document language>.
 
@@ -57,9 +57,9 @@ intent's R-ids, the tasks' accept: conditions and the plan's Quality bar; anythi
 else is at most a nit.
 
 Read: the intent <path> (every R-id), <tasks>/plan.md (Design direction, Quality bar,
-Verification plan), <tasks>/todo.md (tasks and their accept: conditions), and the change:
-`git diff <base>` plus these untracked files: <list>. Read every file the change touches,
-and its tests.
+Verification plan), <tasks>/todo.md (tasks and their accept: conditions), and the change,
+per repository: <repo path> · `git -C <repo path> diff <base>` · untracked: <list>.
+Read every file the change touches, and its tests.
 
 Audit:
 1. Requirements: for every task, does the code meet its accept: condition? For every R-id,
@@ -74,7 +74,7 @@ Audit:
    made dead, scratch files, TODO/FIXME that plan.md does not name, duplication, names
    that drifted from the plan.
 
-Report in exactly this format:
+Report in exactly this format. If you find nothing, the only entry under Findings is `- none`.
 ## Findings
 - [requirement|test|quality|hygiene] [blocker|should|nit] <R-id or task id or —> · <file:line> — <claim> · evidence: <what you read> · fix: <one sentence>
 ## Verdict
@@ -127,7 +127,7 @@ Done when every item in scope has a result.
 
 ## 6. Consolidate
 
-Wait for every peer launched in §3 to exit. An answer that is empty, timed out, or has no `## Findings` section is `no answer`. Collect the findings from §5 and from every answering peer, merge duplicates, and note who found each.
+Wait for every peer launched in §3 to exit. A peer has answered only when its file holds a `## Findings` section whose every entry follows the prompt's format (or is the single entry `- none`) and a `## Verdict` line that starts with `sound` or `gaps`. Anything else (empty, timed out, an error message, unstructured text, a heading with nothing valid under it) is `no answer`: the peer is not counted as having audited, though anything concrete in its text may still be checked as a lead. Collect the findings from §5 and from every answering peer, merge duplicates, and note who found each.
 
 A peer finding is a lead, not a result: check each one in the repo before it counts. Peers agreeing is stronger evidence, not a verdict; nothing is decided by vote. Give every finding one disposition, and append the peer's list as `## Triage` to its result file (`- <finding> → fail | note | discovered | rejected: <why>`):
 
@@ -202,7 +202,7 @@ Keep the raw output of any failing command in a fenced block under its table. Pe
 - [ ] Every task and R-id was checked in the code itself, not taken from checked boxes or `evidence:` lines; the full-run ledger lists every one of them.
 - [ ] Every evidence test was read; `hollow` tests recorded as `fail`.
 - [ ] A slice audit failed nothing that the plan assigns to a later slice.
-- [ ] Peers ran only when named, only on a full run, read-only, on the tree the audit judged; every peer finding was checked in the repo before it counted, none by vote.
+- [ ] Peers ran only when named, only on a full run, read-only, on the tree the audit judged; a peer counted as answering only with well-formed Findings and Verdict; every peer finding was checked in the repo before it counted, none by vote.
 - [ ] Results recorded in `plan.md`, not only in chat.
 - [ ] No code edited beyond formatter and linter autofix under `fix`.
 - [ ] A `phase` / `slice` run wrote only its `checkpoint:` line (and a slice's failing audit lines) in `todo.md`, nothing in `plan.md`, and returned to `tk-implement` without ending the turn.

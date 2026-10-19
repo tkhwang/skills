@@ -19,7 +19,7 @@ Read `docs/agents/tk-workflow.md` first (specs path, module codes). If missing, 
 
 ## 2. Trace
 
-Read the intent, `plan.md`, `todo.md`, and the change as `tk-verify` §1 defines it (`git diff` against the `base:` line in `todo.md`, plus untracked files; read-only). Build:
+Read the intent, `plan.md`, `todo.md`, and the change as `tk-verify` §1 defines it (per repository, `git diff` against its `base:` entry in `todo.md` plus untracked files; read-only). Build:
 
 | R-id | tasks | files / tests | verification | status |
 |---|---|---|---|---|
@@ -39,10 +39,10 @@ Then check:
 
 ## 4. On Go: update permanent documents
 
-1. **Intent**: append `## Outcome` (date, verdict, what shipped per R-id, deferred items, Discovered follow-ups). This marks the intent done.
+1. **Intent**: append `## Outcome` (date, verdict, what shipped per R-id, deferred items, Discovered follow-ups, and the verification in brief: the `## Verification` run line, the `### Audit` summary line, the peers who audited, and every `note`). This marks the intent done, and keeps the verification evidence in a permanent document.
 2. **Module specs** under the specs path for every module touched: describe the **current behaviour in timeless language** ("exports are streamed as CSV"), never the change ("added CSV export"). Create a spec file for a new topic; otherwise patch the existing one.
 3. **Other existing docs** the change affects (README usage, CHANGELOG if the repo keeps one, an ADR only for a hard-to-reverse decision recorded in the plan). Update what exists; create nothing new beyond specs.
-4. **Empty the working files**: replace `plan.md` with `# Plan\n\n_No active work. Run /tk-plan to start._` and `todo.md` with `# Todo\n\n_No active work._`; delete the contents of `docs/tasks/reviews/` and `docs/tasks/debates/`. Their history stays in git.
+4. **Empty the working files**, without losing them. First run `git status --porcelain` on the tasks path: anything uncommitted or untracked there is not in git yet, since the agent never commits. If so, list it and ask whether to empty now (the Outcome keeps the verification summary) or to stop so the human commits the working files first; wait for the answer. Then replace `plan.md` with `# Plan\n\n_No active work. Run /tk-plan to start._` and `todo.md` with `# Todo\n\n_No active work._`, and delete the contents of `docs/tasks/reviews/` and `docs/tasks/debates/`. Committed history is the archive.
 
 ## 5. Stop
 
@@ -53,4 +53,5 @@ Report the verdict, the trace table, documents updated, and the list of files re
 - [ ] Every MUST R-id has tasks, code or tests, and a verification result.
 - [ ] Every changed file is cited by a task or explained.
 - [ ] Specs read as current state, not change log.
-- [ ] `docs/tasks/` emptied only on Go; no git command that changes state was run.
+- [ ] The Outcome carries the verification and audit summary.
+- [ ] `docs/tasks/` emptied only on Go, and only after the human chose to when it held uncommitted files; no git command that changes state was run.

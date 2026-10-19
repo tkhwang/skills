@@ -4,8 +4,12 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 
 **English** | [한글](README.ko.md)
 
+> **You lead, AI sharpens. Hand off. Check together.**
+>
+> You set the direction from your own intent and taste, and the agent sharpens it against the code and current best practice (intent, plan). Then you hand off the build (implement) and check the result together (verify, signoff).
+
 <p align="center">
-  <img src="./assets/readme/tk-workflow.svg" width="100%" alt="tk workflow: five stages (intent, plan, implement, verify, signoff) run left to right with a human approval gate between each; runs with one agent, others join for review and debate; intents are permanent, tasks are per piece of work, specs describe current behaviour">
+  <img src="./assets/readme/tk-workflow.svg" width="100%" alt="tk workflow: five stages (intent, plan, implement, verify, signoff) run left to right with a human approval gate between each, in three parts: you lead and AI sharpens (intent, plan), hand off (implement), check together (verify, signoff); runs with one agent, others join for review and debate; intents are permanent, tasks are per piece of work, specs describe current behaviour">
 </p>
 
 ## What it is

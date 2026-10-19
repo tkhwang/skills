@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="580" viewBox="0 0 1200 580" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
   <title id="title">tk workflow: intent, plan, implement, verify, signoff</title>
-  <desc id="desc">Five stages run left to right. Each stage reads a document and writes a document, and the human approves before the next stage. Intents are permanent, tasks are per piece of work and emptied at signoff, specs describe current behaviour.</desc>
+  <desc id="desc">Five stages run left to right in three parts: you lead and AI sharpens (intent, plan), you hand off the build (implement), and you check the result together (verify, signoff). Each stage reads a document and writes a document, and the human approves before the next stage. Intents are permanent, tasks are per piece of work and emptied at signoff, specs describe current behaviour.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#5b8def"/>
@@ -10,7 +10,7 @@
     </marker>
   </defs>
 
-  <rect width="1200" height="580" rx="24" fill="#0f1115"/>
+  <rect width="1200" height="650" rx="24" fill="#0f1115"/>
 
   <!-- header -->
   <g id="header" transform="translate(56 44)">
@@ -18,113 +18,125 @@
     <text x="0" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif" font-size="34" font-weight="700" fill="#f3f4f6">Five stages. Files are the state. Multi-agent review and debate.</text>
   </g>
 
-  <!-- stage cards -->
-  <g id="stages" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif">
-    <!-- card template: x positions 56, 284, 512, 740, 968 ; width 176 -->
-    <g transform="translate(56 130)">
-      <rect width="196" height="112" rx="14" fill="#171a21" stroke="#2a2f3a"/>
-      <text x="18" y="34" font-size="18" fill="#8a8f98">[0]</text>
-      <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-intent</text>
-      <text x="18" y="94" font-size="19" fill="#b4b9c3">why · what · R-ids</text>
-    </g>
-    <g transform="translate(279 130)">
-      <rect width="196" height="112" rx="14" fill="#171a21" stroke="#2a2f3a"/>
-      <text x="18" y="34" font-size="18" fill="#8a8f98">[1]</text>
-      <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-plan</text>
-      <text x="18" y="94" font-size="19" fill="#b4b9c3">vertical slices</text>
-    </g>
-    <g transform="translate(502 130)">
-      <rect width="196" height="112" rx="14" fill="#171a21" stroke="#2a2f3a"/>
-      <text x="18" y="34" font-size="18" fill="#8a8f98">[2]</text>
-      <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-implement</text>
-      <text x="18" y="94" font-size="19" fill="#b4b9c3">backend → frontend</text>
-    </g>
-    <g transform="translate(725 130)">
-      <rect width="196" height="112" rx="14" fill="#171a21" stroke="#2a2f3a"/>
-      <text x="18" y="34" font-size="18" fill="#8a8f98">[3]</text>
-      <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-verify</text>
-      <text x="18" y="94" font-size="19" fill="#b4b9c3">tsc · eslint · tests</text>
-    </g>
-    <g transform="translate(948 130)">
-      <rect width="196" height="112" rx="14" fill="#171a21" stroke="#5b8def"/>
-      <text x="18" y="34" font-size="18" fill="#8a8f98">[4]</text>
-      <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-signoff</text>
-      <text x="18" y="94" font-size="19" fill="#b4b9c3">Go / No-Go</text>
-    </g>
-
-    <!-- arrows with human gate dots -->
-    <g stroke="#5b8def" stroke-width="2" fill="none">
-      <line x1="252" y1="186" x2="277" y2="186" marker-end="url(#arrow)"/>
-      <line x1="475" y1="186" x2="500" y2="186" marker-end="url(#arrow)"/>
-      <line x1="698" y1="186" x2="723" y2="186" marker-end="url(#arrow)"/>
-      <line x1="921" y1="186" x2="946" y2="186" marker-end="url(#arrow)"/>
-    </g>
-    <text x="600" y="120" text-anchor="middle" font-size="18" fill="#5b8def">every arrow is a human approval gate</text>
+  <!-- phases: you lead the start, hand off the build, check the result together -->
+  <g id="phases" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif">
+    <path d="M56,158 L56,148 L475,148 L475,158" fill="none" stroke="#5b8def" stroke-width="2"/>
+    <path d="M502,158 L502,148 L698,148 L698,158" fill="none" stroke="#8a8f98" stroke-width="2"/>
+    <path d="M725,158 L725,148 L1144,148 L1144,158" fill="none" stroke="#8a8f98" stroke-width="2"/>
+    <text x="265.5" y="136" text-anchor="middle" font-size="24" font-weight="700" fill="#f3f4f6">You lead, AI sharpens.</text>
+    <text x="600" y="136" text-anchor="middle" font-size="22" font-weight="600" fill="#b4b9c3">Hand off.</text>
+    <text x="934.5" y="136" text-anchor="middle" font-size="22" font-weight="600" fill="#b4b9c3">Check together.</text>
   </g>
 
-  <!-- artifact lanes -->
-  <g id="artifacts" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">
-    <!-- connectors from cards to lane -->
-    <g stroke="#2a2f3a" stroke-width="2">
-      <line x1="154" y1="242" x2="154" y2="282"/>
-      <line x1="377" y1="242" x2="377" y2="282"/>
-      <line x1="600" y1="242" x2="600" y2="282"/>
-      <line x1="823" y1="242" x2="823" y2="282"/>
-      <line x1="1046" y1="242" x2="1046" y2="282"/>
+  <g id="flow" transform="translate(0 70)">
+    <!-- stage cards -->
+    <g id="stages" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif">
+      <!-- card template: x positions 56, 284, 512, 740, 968 ; width 176 -->
+      <g transform="translate(56 130)">
+        <rect width="196" height="112" rx="14" fill="#171a21" stroke="#2a2f3a"/>
+        <text x="18" y="34" font-size="18" fill="#8a8f98">[0]</text>
+        <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-intent</text>
+        <text x="18" y="94" font-size="19" fill="#b4b9c3">why · what · R-ids</text>
+      </g>
+      <g transform="translate(279 130)">
+        <rect width="196" height="112" rx="14" fill="#171a21" stroke="#2a2f3a"/>
+        <text x="18" y="34" font-size="18" fill="#8a8f98">[1]</text>
+        <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-plan</text>
+        <text x="18" y="94" font-size="19" fill="#b4b9c3">vertical slices</text>
+      </g>
+      <g transform="translate(502 130)">
+        <rect width="196" height="112" rx="14" fill="#171a21" stroke="#2a2f3a"/>
+        <text x="18" y="34" font-size="18" fill="#8a8f98">[2]</text>
+        <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-implement</text>
+        <text x="18" y="94" font-size="19" fill="#b4b9c3">backend → frontend</text>
+      </g>
+      <g transform="translate(725 130)">
+        <rect width="196" height="112" rx="14" fill="#171a21" stroke="#2a2f3a"/>
+        <text x="18" y="34" font-size="18" fill="#8a8f98">[3]</text>
+        <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-verify</text>
+        <text x="18" y="94" font-size="19" fill="#b4b9c3">tsc · eslint · tests</text>
+      </g>
+      <g transform="translate(948 130)">
+        <rect width="196" height="112" rx="14" fill="#171a21" stroke="#5b8def"/>
+        <text x="18" y="34" font-size="18" fill="#8a8f98">[4]</text>
+        <text x="18" y="66" font-size="24" font-weight="700" fill="#f3f4f6">tk-signoff</text>
+        <text x="18" y="94" font-size="19" fill="#b4b9c3">Go / No-Go</text>
+      </g>
+
+      <!-- arrows with human gate dots -->
+      <g stroke="#5b8def" stroke-width="2" fill="none">
+        <line x1="252" y1="186" x2="277" y2="186" marker-end="url(#arrow)"/>
+        <line x1="475" y1="186" x2="500" y2="186" marker-end="url(#arrow)"/>
+        <line x1="698" y1="186" x2="723" y2="186" marker-end="url(#arrow)"/>
+        <line x1="921" y1="186" x2="946" y2="186" marker-end="url(#arrow)"/>
+      </g>
+      <text x="600" y="120" text-anchor="middle" font-size="18" fill="#5b8def">every arrow is a human approval gate</text>
     </g>
 
-    <!-- intents lane: permanent -->
-    <g transform="translate(56 282)">
-      <rect width="196" height="96" rx="12" fill="#121722" stroke="#2a2f3a"/>
-      <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">writes · permanent</text>
-      <text x="16" y="58" fill="#e5e7eb">docs/intents/</text>
-      <text x="16" y="82" fill="#b4b9c3">AGENT001-slug.md</text>
+    <!-- artifact lanes -->
+    <g id="artifacts" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18">
+      <!-- connectors from cards to lane -->
+      <g stroke="#2a2f3a" stroke-width="2">
+        <line x1="154" y1="242" x2="154" y2="282"/>
+        <line x1="377" y1="242" x2="377" y2="282"/>
+        <line x1="600" y1="242" x2="600" y2="282"/>
+        <line x1="823" y1="242" x2="823" y2="282"/>
+        <line x1="1046" y1="242" x2="1046" y2="282"/>
+      </g>
+
+      <!-- intents lane: permanent -->
+      <g transform="translate(56 282)">
+        <rect width="196" height="96" rx="12" fill="#121722" stroke="#2a2f3a"/>
+        <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">writes · permanent</text>
+        <text x="16" y="58" fill="#e5e7eb">docs/intents/</text>
+        <text x="16" y="82" fill="#b4b9c3">AGENT001-slug.md</text>
+      </g>
+
+      <!-- tasks lane: spans plan, implement, verify -->
+      <g transform="translate(279 282)">
+        <rect width="642" height="96" rx="12" fill="#121722" stroke="#2a2f3a"/>
+        <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">per piece of work · overwritten, emptied at signoff</text>
+        <text x="16" y="58" fill="#e5e7eb">docs/tasks/plan.md</text>
+        <text x="16" y="82" fill="#b4b9c3">decisions · R-id coverage</text>
+        <text x="360" y="58" fill="#e5e7eb">docs/tasks/todo.md</text>
+        <text x="360" y="82" fill="#b4b9c3">- [x] T1.1 · evidence</text>
+      </g>
+
+      <!-- specs lane -->
+      <g transform="translate(948 282)">
+        <rect width="196" height="96" rx="12" fill="#121722" stroke="#5b8def"/>
+        <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">updates · current state</text>
+        <text x="16" y="58" fill="#e5e7eb">docs/specs/</text>
+        <text x="16" y="82" fill="#b4b9c3">intent Outcome</text>
+      </g>
     </g>
 
-    <!-- tasks lane: spans plan, implement, verify -->
-    <g transform="translate(279 282)">
-      <rect width="642" height="96" rx="12" fill="#121722" stroke="#2a2f3a"/>
-      <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">per piece of work · overwritten, emptied at signoff</text>
-      <text x="16" y="58" fill="#e5e7eb">docs/tasks/plan.md</text>
-      <text x="16" y="82" fill="#b4b9c3">decisions · R-id coverage</text>
-      <text x="360" y="58" fill="#e5e7eb">docs/tasks/todo.md</text>
-      <text x="360" y="82" fill="#b4b9c3">- [x] T1.1 · evidence</text>
+    <!-- peers: multi-agent review and debate -->
+    <g id="peers" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif">
+      <g stroke="#8a8f98" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#arrow-dim)">
+        <path d="M154,418 L154,386"/>
+        <path d="M600,418 L600,386"/>
+      </g>
+      <g transform="translate(56 418)">
+        <rect width="1088" height="92" rx="12" fill="#121722" stroke="#2a2f3a" stroke-dasharray="6 4"/>
+        <text x="16" y="30" font-size="17" fill="#8a8f98">optional · tk-multi-review reads the artifact at any gate · tk-multi-debate argues an open decision</text>
+        <g transform="translate(16 44)">
+          <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
+          <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">claude</text>
+        </g>
+        <g transform="translate(124 44)">
+          <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
+          <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">codex</text>
+        </g>
+        <g transform="translate(232 44)">
+          <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
+          <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">grok</text>
+        </g>
+        <text x="360" y="58" font-size="17" fill="#b4b9c3">read-only · headless · one process each · the human still decides</text>
+        <text x="360" y="82" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#e5e7eb">docs/tasks/reviews/ · docs/tasks/debates/</text>
+      </g>
     </g>
 
-    <!-- specs lane -->
-    <g transform="translate(948 282)">
-      <rect width="196" height="96" rx="12" fill="#121722" stroke="#5b8def"/>
-      <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">updates · current state</text>
-      <text x="16" y="58" fill="#e5e7eb">docs/specs/</text>
-      <text x="16" y="82" fill="#b4b9c3">intent Outcome</text>
-    </g>
+    <text x="56" y="558" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif" font-size="18" fill="#8a8f98">tk-grill resolves open decisions one at a time · tk-setup configures the repo once · the agent never commits</text>
   </g>
-
-  <!-- peers: multi-agent review and debate -->
-  <g id="peers" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif">
-    <g stroke="#8a8f98" stroke-width="2" stroke-dasharray="6 5" fill="none" marker-end="url(#arrow-dim)">
-      <path d="M154,418 L154,386"/>
-      <path d="M600,418 L600,386"/>
-    </g>
-    <g transform="translate(56 418)">
-      <rect width="1088" height="92" rx="12" fill="#121722" stroke="#2a2f3a" stroke-dasharray="6 4"/>
-      <text x="16" y="30" font-size="17" fill="#8a8f98">optional · tk-multi-review reads the artifact at any gate · tk-multi-debate argues an open decision</text>
-      <g transform="translate(16 44)">
-        <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
-        <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">claude</text>
-      </g>
-      <g transform="translate(124 44)">
-        <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
-        <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">codex</text>
-      </g>
-      <g transform="translate(232 44)">
-        <rect width="96" height="34" rx="17" fill="#171a21" stroke="#2a2f3a"/>
-        <text x="48" y="23" text-anchor="middle" font-size="18" font-weight="700" fill="#f3f4f6">grok</text>
-      </g>
-      <text x="360" y="58" font-size="17" fill="#b4b9c3">read-only · headless · one process each · the human still decides</text>
-      <text x="360" y="82" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#e5e7eb">docs/tasks/reviews/ · docs/tasks/debates/</text>
-    </g>
-  </g>
-
-  <text x="56" y="558" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', sans-serif" font-size="18" fill="#8a8f98">tk-grill resolves open decisions one at a time · tk-setup configures the repo once · the agent never commits</text>
 </svg>

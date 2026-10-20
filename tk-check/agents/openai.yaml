@@ -1,0 +1,4 @@
+interface:
+  display_name: "tk Check"
+  short_description: "Run typecheck, lint, format, tests and build on the change, and fix what fails without silencing the tools"
+  default_prompt: "Use $tk-check on my current change: discover this repo's typecheck/lint/format/test/build commands, apply the formatter's and linter's write modes to the changed files, run every check with warnings as failures, then fix what still fails in the code itself, up to three rounds, never with suppression comments, type escapes, weakened tests or config changes. Report failures that already existed before my change instead of fixing them."

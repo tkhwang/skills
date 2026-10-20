@@ -2,7 +2,7 @@
 name: tk-signoff
 description: "Stage [4] of the tk workflow: trace every requirement through plan, code, tests and verification, decide Go / No-Go, and on Go update the intent Outcome and module specs and empty docs/tasks. Use when the user runs it or tk-workflow routes to it."
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # tk-signoff
@@ -42,7 +42,7 @@ Then check:
 1. **Intent**: append `## Outcome` (date, verdict, what shipped per R-id, deferred items, Discovered follow-ups, and the verification in brief: the `## Verification` run line, the `### Audit` summary line, the peers who audited, and every `note`). This marks the intent done, and keeps the verification evidence in a permanent document.
 2. **Module specs** under the specs path for every module touched: describe the **current behaviour in timeless language** ("exports are streamed as CSV"), never the change ("added CSV export"). Create a spec file for a new topic; otherwise patch the existing one.
 3. **Other existing docs** the change affects (README usage, CHANGELOG if the repo keeps one, an ADR only for a hard-to-reverse decision recorded in the plan). Update what exists; create nothing new beyond specs.
-4. **Empty the working files**, without losing them. First run `git status --porcelain` on the tasks path: anything uncommitted or untracked there is not in git yet, since the agent never commits. If so, list it and ask whether to empty now (the Outcome keeps the verification summary) or to stop so the human commits the working files first; wait for the answer. Then replace `plan.md` with `# Plan\n\n_No active work. Run /tk-plan to start._` and `todo.md` with `# Todo\n\n_No active work._`, and delete the contents of `docs/tasks/reviews/` and `docs/tasks/debates/`. Committed history is the archive.
+4. **Empty the working files**, without losing them. First run `git status --porcelain` on the tasks path: anything uncommitted or untracked there is not in git yet, since the agent never commits. If so, list it and ask whether to empty now (the Outcome keeps the verification summary) or to stop so the human commits the working files first; wait for the answer. Then replace `plan.md` with `# Plan\n\n_No active work. Run /tk-plan to start._` and `todo.md` with `# Todo\n\n_No active work._`, and delete `docs/tasks/baseline.md` and the contents of `docs/tasks/reviews/` and `docs/tasks/debates/`. Committed history is the archive.
 
 ## 5. Stop
 

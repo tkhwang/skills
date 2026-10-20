@@ -71,8 +71,16 @@ A command that cannot run (missing tool, dependency or environment variable) is 
 
 Each failure is **new** or **baseline**:
 
-- **With a `baseline:` line** in `todo.md`: baseline when it matches an entry in `<tasks>/baseline.md` (a type error or lint message by file, code or rule, and message, line numbers ignored; a test by its full name; a format failure by file) and the file holds no more of it than at baseline.
-- **Without one** (a run outside the tk workflow, or work started before baselines existed): a lint message on a line the change did not touch is baseline, and so is a type error or failing test in a file outside the change that involves nothing the change modified (no symbol, type, module or fixture it touched).
+- **With a `baseline:` line** in `todo.md`: baseline when it matches an entry in `<tasks>/baseline.md` and the file holds no more of it than at baseline. Line numbers, durations and absolute paths are ignored; everything else must match:
+  - a type error or lint message: file, code or rule, and message
+  - a failing test: its full name and its failure, the first line of the assertion or error it reports; the same test failing for another reason is new
+  - a format failure: the file
+  - a failed build: the first error's file, code and message
+  - a command that cannot run: the command and its error
+- **Without one** (a run outside the tk workflow, or work started before baselines existed), compare with the code before the change, at `<base>`:
+  - a lint message is baseline only when linting that file as it was at `<base>` reports the same rule and message (`git show <base>:<file>` piped to the linter's stdin mode with the file's name, or a temporary worktree at `<base>`). A message on an untouched line can still be the change's own: removing a variable's last use flags its unchanged declaration. When the base version cannot be linted, the message is new.
+  - a type error, failing test or failed build is baseline when it is in a file outside the change and involves nothing the change modified (no symbol, type, module or fixture it touched).
+  - a command that cannot run is baseline when it also cannot run at `<base>` for the same error.
 - Everything else is new.
 
 A check is `pass` with no failure, `fail` with any new failure, `baseline` with baseline failures only, `none` without a command. Only `fail` is red. Baseline failures are reported, never fixed: fixing them is a separate change.
@@ -81,7 +89,7 @@ Done when every check in scope has a result.
 
 ## 5. Fix (`fix` only)
 
-While a check is `fail`, up to three rounds. A round goes through every failing check, causes first (type errors, then lint, then tests and build, since one type error often explains the rest), applies the write modes to the files it edited, and re-runs typecheck, every check that failed, and the scope's tests.
+While a check is `fail`, up to three rounds. A round goes through every failing check, causes first (type errors, then lint, then tests and build, since one type error often explains the rest), applies the write modes to the files it edited, and then re-runs every check in scope, including those that passed before the round: a fix for a test can add a lint error or break the build. A round counts as green only when that whole re-run is.
 
 - **Fix the cause in the code.** Read the raw output, find where the failure comes from, and fix it there, in the structure the code already has.
 - **The requirement decides a failing test.** Fix the code. Change a test only when it contradicts the R-id or `accept:` condition it claims to prove, and say which; when that is unclear, stop.
@@ -124,7 +132,7 @@ fixes:
 Keep the raw output of every check still `fail` in a fenced block under the table. Then, by scope:
 
 - **`phase` / `slice`**: write, or on a repeat run replace, one line under the heading in `todo.md` (on a `###`, below its `cleanup:` line): `checkpoint: tsc ✓ · eslint ✓ · prettier ✓ · vitest ✓ (baseline 1) · fixed 2 · YYYY-MM-DD HH:MM`, with `✗` on each red check. Report the result, the fixes and the baseline failures to `tk-implement`, and return.
-- **`baseline`**: write, or replace, the line under `base:` in `todo.md`: `baseline: clean · YYYY-MM-DD HH:MM`, or `baseline: <n> failing · tsc 0 · eslint 14 · prettier 2 files · vitest 1 · see <tasks>/baseline.md · YYYY-MM-DD HH:MM`, and then write `<tasks>/baseline.md` with one line per entry: package, check, file, code or rule or test name, message, count. Return to `tk-implement`.
+- **`baseline`**: write, or replace, the line under `base:` in `todo.md`: `baseline: clean · YYYY-MM-DD HH:MM`, or `baseline: <n> failing · tsc 0 · eslint 14 · prettier 2 files · vitest 1 · see <tasks>/baseline.md · YYYY-MM-DD HH:MM`, and then write `<tasks>/baseline.md` with one line per entry: package, check, file, code or rule or test name, message (for a test, the first line of its failure; for a build, the first error; for a command that cannot run, the command and its error), count. Return to `tk-implement`.
 - **`all`**: return the report to `tk-verify`, which records it.
 - **(none)**: write nothing outside the code. Run by the human, end the turn with the report and anything left to fix; called by `tk-implement`, return to it.
 

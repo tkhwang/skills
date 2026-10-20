@@ -1,46 +1,43 @@
 ---
 name: tk-verify
-description: "Stage [3] of the tk workflow: run the repo's typecheck, lint (warnings fail), format check and tests, plus the plan's behaviour checks, then audit the work itself: every task and R-id in the code, what each test really asserts, the plan's Quality bar, and leftover mess. Named peers (claude, codex, grok) audit independently and the orchestrator confirms their findings. Results are recorded per R-id in plan.md. With phase or slice it is the checkpoint tk-implement calls mid-build: the same commands, scoped to what was just built, recorded in todo.md. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[fix] [claude | codex | grok …] | phase | slice"
+description: "Stage [3] of the tk workflow: run the repo's typecheck, lint (warnings fail), format check, tests and build through tk-check in report mode, plus the plan's behaviour checks, then audit the work itself: every task and R-id in the code, what each test really asserts, the plan's Quality bar, and leftover mess. Named peers (claude, codex, grok) audit independently and the orchestrator confirms their findings. Results are recorded per R-id in plan.md. With slice it is the audit tk-implement calls at every slice boundary, right after tk-check slice: that slice's behaviour checks and audit, recorded in todo.md. Use when the user runs it or tk-workflow routes to it."
+argument-hint: "[fix] [claude | codex | grok …] | slice"
 metadata:
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # tk-verify
 
-Measure, then report; never fix code. A checked box, a "done" in chat, and a green test run are claims, not evidence: this stage opens the code and the tests and checks each claim itself. Commands come from the repo and warnings count as failures. Without a scope argument this is the stage: every package, the full suite, a full audit, optional peer audits, results in `plan.md` under `## Verification` for `tk-signoff`. With `phase` or `slice` it is the checkpoint `tk-implement` calls mid-build: the same commands, scoped to what was just built, recorded under that heading in `todo.md`.
+Measure, then report; never fix code. A checked box, a "done" in chat, and a green test run are claims, not evidence: this stage opens the code and the tests and checks each claim itself. Commands come from the repo and warnings count as failures; `tk-check` runs them in `report` mode (`autofix` under `fix`), so the stage and every checkpoint run the same commands. Without a scope argument this is the stage: every package, the full suite, a full audit, optional peer audits, results in `plan.md` under `## Verification` for `tk-signoff`. With `slice` it is the audit `tk-implement` calls at every slice boundary, right after `tk-check slice` has run the commands: that slice's behaviour checks and audit, recorded under its heading in `todo.md`. The sub-phase checkpoint is `tk-check phase`; `phase` is not a scope here.
 
 ## Scope
 
 | Argument | Runs | Records | Called by |
 |---|---|---|---|
-| `phase` | typecheck and lint of the packages the last `###` sub-phase touched, plus that sub-phase's `verify:` commands; no audit | `checkpoint: <cmd> ✓ · <cmd> ✗ · YYYY-MM-DD HH:MM` under that `###` heading in `todo.md` | `tk-implement` at every sub-phase boundary |
-| `slice` | as `phase` over the whole `##` slice, plus the plan's behaviour checks for the R-ids that slice covers where they can run without a human, plus the §5 audit scoped to the slice | the same line under the `##` heading, ending `audit ✓` or `audit ✗ (n)`, then one indented line per failing finding | `tk-implement` at every slice boundary |
+| `slice` | the plan's behaviour checks for the R-ids that slice covers where they can run without a human, plus the §5 audit scoped to the slice; the commands already ran in `tk-check slice` | `audit:` line under the `##` heading, below `tk-check`'s `checkpoint:` line, then one indented line per failing finding | `tk-implement` at every slice boundary, after `tk-check slice` |
 | (none) | everything below, all packages, full audit | `plan.md` `## Verification` | the human or the driver after the last task |
 
-**Peers.** Peer names (`/tk-verify codex grok`, `/tk-verify fix claude`) add an independent audit by each named agent (§3). Without names the current agent audits alone. Peers run on a full run only: with `phase` or `slice` the names are rejected with a one-line reason, since checkpoints run many times inside one build.
+**Peers.** Peer names (`/tk-verify codex grok`, `/tk-verify fix claude`) add an independent audit by each named agent (§3). Without names the current agent audits alone. Peers run on a full run only: with `slice` the names are rejected with a one-line reason, since checkpoints run many times inside one build.
 
-**Scoped runs** never touch `plan.md` and never change the `stale:` flag; findings that belong in `## Discovered` are reported to `tk-implement`, which records them. A scoped run is red when a command fails or an audit finding is `fail` (§6), green otherwise. Pass or fail, it reports and returns to `tk-implement` in the same turn without ending it; fixing and deciding where to stop are `tk-implement`'s job. A repeat run on a heading that already carries a `checkpoint:` line (the fix loop) replaces that line and its audit lines, and re-audits only the findings that failed plus the files changed since; the full slice audit runs once per slice. §8 applies to full runs only.
+**Scoped runs** never touch `plan.md` and never change the `stale:` flag; findings that belong in `## Discovered` are reported to `tk-implement`, which records them. A scoped run is red when a behaviour check or an audit finding is `fail` (§6), green otherwise. Pass or fail, it reports and returns to `tk-implement` in the same turn without ending it; fixing and deciding where to stop are `tk-implement`'s job. A repeat run on a heading that already carries an `audit:` line (the fix loop) replaces that line and its finding lines, and re-audits only the findings that failed plus the files changed since; the full slice audit runs once per slice. §8 applies to full runs only.
 
 ## Config
 
-Read `docs/agents/tk-workflow.md` first: the Verify table per package, the tasks path (`<tasks>` below, default `docs/tasks/`), and `## Peers` for peer names and command overrides. If missing, show defaults and ask once per session, pointing at `/tk-setup`.
+Read `docs/agents/tk-workflow.md` first: the packages, the tasks path (`<tasks>` below, default `docs/tasks/`), and `## Peers` for peer names and command overrides. If missing, show defaults and ask once per session, pointing at `/tk-setup`.
 
 ## 1. Preconditions
 
-Full scope: every box in `todo.md` is checked; otherwise list the unchecked tasks and point at `tk-implement`. `phase` / `slice`: every box of that sub-phase or slice is checked. A checked box means the work is ready to audit; §5 decides whether it is done.
+Full scope: every box in `todo.md` is checked; otherwise list the unchecked tasks and point at `tk-implement`. `slice`: every box of that slice is checked, and its `checkpoint:` line from `tk-check slice` has no `✗`; otherwise point at `tk-check slice`. A checked box means the work is ready to audit; §5 decides whether it is done.
 
 **The change** under audit is collected per repository in scope: every distinct git repository among the config's package paths and the docs home (`git -C <path> rev-parse --show-toplevel`). In each one it is `git diff <base>` plus its untracked files (`git ls-files --others --exclude-standard`). `<base>` is that repository's entry on the `base:` line `tk-implement` writes in `todo.md` when work starts: `base: <sha>` for a single repository, `base: <repo path>@<sha> · <repo path>@<sha>` for several, paths relative to the docs home. A repository without an entry falls back to the merge-base of its `HEAD` and its default branch (`git symbolic-ref --short refs/remotes/origin/HEAD`); ask once if that does not resolve. `tk-implement`, `tk-signoff` and `tk-multi-review` use this same definition. A scoped run narrows the change to the files its tasks list and the untracked files beside them.
 
-## 2. Discover commands
+## 2. Commands
 
-In order: the config's Verify table → `plan.md` Verification plan → `package.json` scripts (`typecheck`, `lint`, `format`, `test`) and checked-in wrappers → what CI workflows actually run. Use the repo's own commands; add `--max-warnings 0` to eslint and `--noEmit` to tsc when the script does not already fail on warnings. Note each command's source.
-
-Done when every package in scope has a command for typecheck, lint, format, test, or an explicit "none" with the reason.
+`tk-check` discovers them (its §2: the config's Verify table, the plan's Verification plan, package scripts, CI) and runs them; this stage keeps no command list of its own and runs none of those commands itself. The behaviour checks in §4 come from the plan's Verification plan.
 
 ## 3. Launch peer audits (full run with peer names)
 
-Peers take the longest, so they launch early and work while §4 and §5 proceed. With `fix`, the autofix in §4 runs first so that every peer reads the same tree the audit judges; then launch. Skip this section when no peer is named.
+Peers take the longest, so they launch early and work while §4 and §5 proceed. With `fix`, they launch right after `tk-check` returns in §4, so that every peer reads the autofixed tree the audit judges. Skip this section when no peer is named.
 
 - **Who**: each name, matched against `## Peers` names first (any role; naming a peer is the choice), then kinds (`claude`, `codex`, `grok`). A kind not on `PATH` is skipped with a one-line note. Naming the orchestrator's own kind is allowed and useful: a fresh headless process carries none of the context of the session that wrote the code. Peers add to the orchestrator's own audit; they never replace it.
 - **Prompt**: self-contained, since the peer cannot see this conversation, written to `<tasks>/reviews/audit-<peer>.prompt.md`. Name only paths that exist.
@@ -85,15 +82,10 @@ Done when every named peer is launched or skipped with a note.
 
 ## 4. Run
 
-Per package in scope (full: all packages; `phase` / `slice`: the packages whose files the tasks list), in this order, reading every output. A scoped run does steps 1, 2 and the tasks' `verify:` commands; `slice` adds the runnable part of step 5 for its R-ids; format and the full suite are full-scope only.
+1. **Commands** (full run): invoke `tk-check all report` with the Skill tool, or `tk-check all autofix` under `fix`. It runs, per package, typecheck, lint, format check, the full test suite once and the build where the repo has one, warnings as failures, and returns its table. Each check is `pass`, `fail`, `none`, or `baseline`: failing only on what already failed before the work started, as the `baseline:` line in `todo.md` records. `baseline` does not block; its entries go to `## Discovered` (§6). On `slice` the commands already ran in `tk-check slice`; skip this step.
+2. **Behaviour checks** from the plan's Verification plan (on `slice`, those for its R-ids): run what can be run (CLI, HTTP, scripts); list for the human what needs a browser or a device, with exact steps and the R-id each proves.
 
-1. typecheck (zero errors, zero warnings)
-2. lint (zero warnings)
-3. format check
-4. full test suite, once
-5. behaviour checks from the plan's Verification plan: run what can be run (CLI, HTTP, scripts); list for the human what needs a browser or a device, with exact steps and the R-id each proves.
-
-With the `fix` argument (full scope only; `phase fix` and `slice fix` are rejected with a one-line reason, since scoped runs never change code): run the formatter's write mode and the linter's `--fix` before anything else, peers included, then run the full sequence. Type errors, failing tests and audit findings are never auto-fixed here.
+`fix` is full scope only (`slice fix` is rejected with a one-line reason, since scoped runs never change code): it lets `tk-check` apply the formatter's and the linter's write modes to the change's files before it measures, and nothing else. Type errors, failing tests and audit findings are never fixed here; `tk-check` at its default `fix` level or `tk-implement` fixes them.
 
 ## 5. Audit
 
@@ -101,7 +93,6 @@ Read as a reviewer who did not write this code: open the files themselves, not t
 
 - **Full run**: every task, R-id, test and Quality bar line of the work.
 - **`slice`**: the slice's tasks, the part of each R-id this slice delivers, the tests in its files, and the Quality bar lines that apply to them. What the plan assigns to a later slice is `pending`, never a failure; whether an R-id is complete across slices is judged on the full run.
-- **`phase`**: no audit.
 
 1. **Requirements, one by one.** For every task, open the files it lists and confirm its `accept:` condition holds in the code: `done`, `partial` or `missing`, with `file:line`. For every R-id, confirm all its tasks are done and the behaviour is reachable end to end: registered, exported, called, rendered, not only written. That includes the error paths and edge cases the Quality bar names for it; happy path only is `partial`. Result: `complete`, `partial` or `missing` (on a slice: for the part this slice delivers). Re-run any task's `verify:` command that the full suite does not already cover, and compare the output with its `evidence:` line.
 2. **Tests, inside not outside.** Read every test cited as evidence and every test added or changed in the change, and ask: would it fail if the behaviour it claims to prove were removed or inverted? Mark it `sound`, `weak` (proves part of the claim) or `hollow` (proves nothing). Signs of hollow:
@@ -133,7 +124,7 @@ A peer finding is a lead, not a result: check each one in the repo before it cou
 
 - **fail**: confirmed, and it leaves a task's `accept:` unmet, an R-id (on a slice: this slice's part of it) incomplete, or a Quality bar line not met; or it is a `hollow` test, a `weak` test that is the only test evidence for a MUST R-id, or a mechanical hygiene leftover the change introduced.
 - **note**: confirmed and in scope, but none of the above: a `weak` test beside sound evidence, a judgement hygiene item that no Quality bar line covers. Listed; does not block.
-- **discovered**: confirmed, but outside what the plan asked: a structure the plan did not choose, debt that predates the change, mess in files the change did not touch. Full run: record it in `plan.md` `## Discovered` as `NOTICED, NOT TOUCHED`. Scoped run: report it to `tk-implement`.
+- **discovered**: confirmed, but outside what the plan asked: a structure the plan did not choose, debt that predates the change (a `baseline` command result included), mess in files the change did not touch. Full run: record it in `plan.md` `## Discovered` as `NOTICED, NOT TOUCHED`. Scoped run: report it to `tk-implement`.
 - **rejected**: the repo contradicts it. Say why in one sentence; rejecting a peer's `blocker` needs `file:line` evidence.
 
 Only `fail` blocks. A named peer with `no answer` is listed in the record and named again in §8; the audit stands on the rest, and the human decides whether to re-run `/tk-verify <peer>`.
@@ -142,7 +133,7 @@ Done when no finding lacks a disposition.
 
 ## 7. Record
 
-**Scoped run**: write, or on a repeat run replace, the `checkpoint:` line under the heading in `todo.md`. A `slice` line ends `audit ✓` or `audit ✗ (n)`, followed on failure by one indented line per `fail` finding (`- audit: <file:line> — <what is wrong>`) so `tk-implement` can fix them. Report pass or fail, plus any `discovered` items, and return to `tk-implement`; skip §8 and do not end the turn.
+**Scoped run**: write, or on a repeat run replace, the `audit:` line under the `##` heading in `todo.md`, below `tk-check`'s `checkpoint:` line: `audit: ✓ · <behaviour check> ✓ · … · YYYY-MM-DD HH:MM`, or `audit: ✗ (n) · …`, followed on failure by one indented line per `fail` finding (`- audit: <file:line> — <what is wrong>`) so `tk-implement` can fix them. Report pass or fail, plus any `discovered` items, and return to `tk-implement`; skip §8 and do not end the turn.
 
 **Full run**: append or replace `## Verification` in `plan.md`. The `### Audit` ledger has one row for every task in `todo.md`, every R-id in the intent, and every Quality bar line, so that nothing is counted without being listed:
 
@@ -154,6 +145,7 @@ run: 2026-10-10 14:02 · fix: no · stale: no · audit: self, codex, grok (no an
 |---|---|---|---|---|
 | backend | typecheck | pnpm tsc --noEmit | pass | |
 | backend | lint | pnpm eslint . --max-warnings 0 | fail | 2 warnings in src/export/csv.ts |
+| backend | test | pnpm vitest run | baseline | test/legacy.test.ts › parses v1 format, failing before the work (Discovered) |
 
 | R-id | behaviour check | result | evidence |
 |---|---|---|---|
@@ -185,11 +177,11 @@ tasks 8/9 done · R-ids 3/4 complete · tests 12 sound, 1 weak, 1 hollow · Qual
 1. … (proves R3)
 ```
 
-Keep the raw output of any failing command in a fenced block under its table. Peer prompts and answers stay under `<tasks>/reviews/audit-*`.
+The command rows are `tk-check`'s report as it returned it. Keep the raw output of any failing command in a fenced block under its table. Peer prompts and answers stay under `<tasks>/reviews/audit-*`.
 
 ## 8. Stop (full run)
 
-- Any `fail`, from a command, a behaviour check or the audit → list them with the R-ids affected and point at `tk-implement`; its fix mode turns each failing row into a task. End the turn.
+- Any `fail`, from a command, a behaviour check or the audit → list them with the R-ids affected and point at `tk-implement`; its fix mode turns each failing row into a task. When only commands failed, `/tk-check` fixes them directly; then verify again. End the turn.
 - A `human` row that is the acceptance evidence for a **MUST** requirement needs a result before signoff: print the steps, ask the human to run them and report, and record `pass` / `fail` with their evidence. Until then the work is **awaiting human verification**; say so and end the turn without pointing at signoff.
 - No `fail` anywhere (`note`, `discovered` and `rejected` do not block; a `human` row may stay open only for a SHOULD, and is listed as such) → print the audit summary line, the peers who took part, any named peer with no answer (with `/tk-verify <peer>` to retry), and the next command (`/tk-signoff` or `다음`). End the turn.
 
@@ -197,12 +189,12 @@ Keep the raw output of any failing command in a fenced block under its table. Pe
 
 ## Verification
 
-- [ ] Every command traced to config, scripts, or CI; none guessed.
-- [ ] Warnings reported as failures.
+- [ ] Every command ran through `tk-check` (`report`, or `autofix` under `fix`), none here; warnings reported as failures.
+- [ ] `baseline` results did not block and went to Discovered.
 - [ ] Every task and R-id was checked in the code itself, not taken from checked boxes or `evidence:` lines; the full-run ledger lists every one of them.
 - [ ] Every evidence test was read; `hollow` tests recorded as `fail`.
 - [ ] A slice audit failed nothing that the plan assigns to a later slice.
 - [ ] Peers ran only when named, only on a full run, read-only, on the tree the audit judged; a peer counted as answering only with well-formed Findings and Verdict; every peer finding was checked in the repo before it counted, none by vote.
 - [ ] Results recorded in `plan.md`, not only in chat.
 - [ ] No code edited beyond formatter and linter autofix under `fix`.
-- [ ] A `phase` / `slice` run wrote only its `checkpoint:` line (and a slice's failing audit lines) in `todo.md`, nothing in `plan.md`, and returned to `tk-implement` without ending the turn.
+- [ ] A `slice` run wrote only its `audit:` line (and its failing finding lines) in `todo.md`, nothing in `plan.md`, and returned to `tk-implement` without ending the turn.

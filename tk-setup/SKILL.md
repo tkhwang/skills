@@ -4,7 +4,7 @@ description: "Configure a repo for the tk-* workflow skills: layout, docs paths,
 argument-hint: "[optional notes about the repo]"
 disable-model-invocation: true
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
 # tk-setup
@@ -17,7 +17,7 @@ Read before asking. Collect:
 
 - **Repo shape**: `git remote -v`, `git rev-parse --show-toplevel`. Is the working folder itself a repo, or a folder holding several repos (`backend/`, `frontend/` each with `.git`)?
 - **Packages**: every `package.json` (or `pyproject.toml`, `go.mod`, `Cargo.toml`) within two levels; lockfile → package manager; `pnpm-workspace.yaml` / `workspaces` field.
-- **Commands**: each package's scripts for typecheck, lint, format, test; checked-in wrappers; CI workflows under `.github/workflows/` and what they actually run. CI is the source of truth for what gates merges.
+- **Commands**: each package's scripts for typecheck, lint, format, test and build; their write modes (`lint:fix`, `format` / `format:write`, or the tools' own `--fix` / `--write`) and the test runner's related-tests mode (`vitest related --run`, `jest --findRelatedTests`), which `tk-check` uses; checked-in wrappers; CI workflows under `.github/workflows/` and what they actually run. CI is the source of truth for what gates merges.
 - **Existing docs**: `docs/` tree; any `intents/`, `specs/`, `tasks/`, `plans/` folders, possibly nested as `docs/<module>/…`; existing intent filenames and their module codes (`AGENT001-…` → `AGENT`).
 - **Existing agent config**: `CLAUDE.md`, `AGENTS.md`, an `## Agent skills` block, `docs/agents/*.md` from other skill sets.
 - **Peer agents**: which of `claude`, `codex`, `grok` are on `PATH` (`command -v`), and whether this session runs inside herdr (`HERDR_ENV=1`). These feed `## Peers` for `tk-multi-review` / `tk-multi-debate`, and the names and command overrides `tk-verify <peer…>` uses.
@@ -75,9 +75,10 @@ Done when both files exist and the config has no unresolved question marks. Tell
 | AGENT | …    | src/agent      |
 
 ## Verify
-| package | typecheck | lint | format | test |
-|---------|-----------|------|--------|------|
-| app     | pnpm tsc --noEmit | pnpm eslint . --max-warnings 0 | pnpm prettier --check . | pnpm test |
+| package | typecheck | lint | format | test | build | fix | related tests |
+|---------|-----------|------|--------|------|-------|-----|---------------|
+| app     | pnpm tsc --noEmit | pnpm eslint . --max-warnings 0 | pnpm prettier --check . | pnpm test | pnpm build | pnpm eslint --fix · pnpm prettier --write | pnpm vitest related --run |
+- fix: write modes, run in order on the changed files · related tests: takes a file list · `—`: the repo has none
 
 ## Language
 - conversation: ko
@@ -92,7 +93,7 @@ Done when both files exist and the config has no unresolved question marks. Tell
 
 ## Verification
 
-- [ ] Every `Verify` command was found in scripts or CI, not guessed.
+- [ ] Every `Verify` command was found in scripts or CI, or is the write or related-tests mode of a tool found there; none guessed.
 - [ ] `Modules` codes match existing intent filenames, if any.
 - [ ] The pointer block is in exactly one of `CLAUDE.md` / `AGENTS.md`.
 - [ ] Every `Peers` kind is installed on this machine, or the row is marked `not installed`.

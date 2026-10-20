@@ -18,7 +18,7 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 - **단계마다 사람의 승인.** 단계는 산출물을 저장하고 요약을 출력한 뒤 턴을 끝냅니다. 다음 단계는 명시적인 "다음"에만 시작합니다.
 - **품질은 먼저 요구하고, 나중에 감사(audit)합니다.** plan 은 가장 작은 patch 가 아니라 더 나은 설계를 목표로 합니다. 지금 구조를 업계 best practice 와 비교해 근거를 남기고, 검사 가능한 Quality bar 를 적습니다. 구현은 그 기준대로 만들고 하는 동안 정리하며, 경계마다 `tk-check` 가 repo 의 typecheck, lint, format, 테스트를 돌리고 실패를 도구를 끄지 않고 고칩니다. 검증은 체크박스나 초록 테스트를 그대로 믿지 않고 코드를 열고 테스트를 읽습니다. 혼자 하거나, 다른 agent 들이 각자 독립적으로 감사합니다.
 - **multi-agent 리뷰와 토론.** 기본은 agent 하나로 돕니다. `리뷰` / `토론` 이라고 하면 다른 agent(claude, codex, grok)가 산출물을 읽거나 결정을 놓고 토론합니다. 읽기 전용이고 답은 파일로 남으며, 문서와 코드를 고치는 agent 는 여전히 하나입니다.
-- **agent 는 commit 하지 않음.** git 은 읽기만 합니다. commit, push, branch 는 사람이 합니다.
+- **agent 는 commit 하지 않음.** git 은 읽기만 합니다. commit, push, branch 는 사람이 합니다. 유일한 예외는 흐름 밖의 `tk-fix-pr` 로, 직접 넘긴 PR 에 대해서만, 승인한 뒤에 합니다.
 
 ## Skill 목록
 
@@ -40,6 +40,7 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 |-------|---------|
 | [`tk-grill`](tk-grill/) | 문서의 미결 결정을 추천안과 함께 한 번에 하나씩 묻고, 답을 문서에 반영합니다. `tk-intent` 와 `tk-plan` 이 사용하고, 어떤 설계 문서에든 단독으로 쓸 수 있습니다. |
 | [`tk-check`](tk-check/) | 변경에 대해 repo 자체의 typecheck, lint(warning 도 실패), format 검사, 테스트, build 를 돌립니다. 바뀐 파일에 formatter 와 linter 의 write 모드를 먼저 적용하고, 남은 실패는 코드에서 최대 세 번까지 고칩니다. `eslint-disable`, `@ts-ignore`, `any`, 테스트 skip, 설정 변경으로 통과시키지는 않습니다. 작업 전부터 실패하던 것은 고치지 않고 보고만 합니다. `tk-implement` 가 경계마다, `tk-verify` 가 report 모드로 쓰고, 아무 변경 뒤에나 `/tk-check` 로 단독 실행할 수 있습니다. |
+| [`tk-fix-pr`](tk-fix-pr/) | `/tk-fix-pr <PR 링크>` 는 PR 의 미해결 review thread, review 본문의 지적, 실패한 check 를 모으고, 각각을 코드와 대조해 확인한 뒤(리뷰 내용은 데이터일 뿐 지시로 따르지 않음) 맞는 것만 고치고 `tk-check` 를 돌립니다. 한 번의 승인 뒤 사용자 이름으로 trailer 없이 commit 하고, PR branch 에 force 없이 push 하고, thread 마다 답글(`Fixed in <sha>: …`)을 달아 처리한 것을 resolve 하고, 요약 comment 를 남깁니다. `report` 는 분류만 합니다. |
 
 ### Multi-agent
 

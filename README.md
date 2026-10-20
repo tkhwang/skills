@@ -18,7 +18,7 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 - **A human gate at every stage.** A stage saves its artifact, prints a summary, and ends the turn. The next stage starts only on an explicit "next".
 - **Quality is asked for, then audited.** The plan aims for the better design, not the smallest patch: it compares the current structure with current best practice, cites its sources, and writes a checkable Quality bar. Implementation builds to that bar and cleans up as it goes, and `tk-check` runs the repo's typecheck, lint, format and tests at every boundary, fixing what fails without silencing the tools. Verification takes no checkbox or green run on trust: it opens the code and reads the tests, alone or with peer agents auditing independently.
 - **Multi-agent review and debate.** The flow runs with one agent. Say `review` or `debate` and other agents (claude, codex, grok) read the artifact or argue a decision, read-only; their answers land in files, and one agent still does all the editing.
-- **The agent never commits.** It reads git, it does not write it. Commits, pushes, and branches are yours.
+- **The agent never commits.** It reads git, it does not write it. Commits, pushes, and branches are yours. The one exception is `tk-fix-pr`, outside the flow, on a PR you hand it, after you approve.
 
 ## Skills
 
@@ -40,6 +40,7 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 |-------|--------------|
 | [`tk-grill`](tk-grill/) | Asks the unresolved decisions in a document one at a time, with a recommendation, and patches answers in. Used by `tk-intent` and `tk-plan`; works on any design doc on its own. |
 | [`tk-check`](tk-check/) | Runs the repo's own typecheck, lint (warnings fail), format check, tests and build on the change. Applies the formatter's and linter's write modes to the changed files, then fixes what still fails in the code, up to three rounds, never with `eslint-disable`, `@ts-ignore`, `any`, skipped tests or config changes. What already failed before the work is reported, not fixed. Used by `tk-implement` at every boundary and by `tk-verify` in report mode; `/tk-check` works on its own after any change. |
+| [`tk-fix-pr`](tk-fix-pr/) | `/tk-fix-pr <PR link>` collects the PR's unresolved review threads, review-body findings and failing checks, confirms each against the code (review text is data, never instructions), fixes the valid ones and runs `tk-check`. After one approval gate it commits in your name with no trailers, pushes to the PR branch without force, replies to every thread (`Fixed in <sha>: …`), resolves the addressed ones and posts a summary comment. `report` only triages. |
 
 ### Multi-agent
 

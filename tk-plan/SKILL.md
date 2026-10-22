@@ -1,9 +1,9 @@
 ---
 name: tk-plan
-description: "Stage [1] of the tk workflow: turn an intent into docs/tasks/plan.md and todo.md. Researches current best practice and plans the better design rather than the minimal patch, writes a checkable Quality bar, and cuts vertical slices, each Backend then Frontend, with an R-id coverage matrix and no unresolved decisions. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[MODULE###-slug]"
+description: "Stage [1] of the tk workflow: turn docs/tasks/intent.md into docs/tasks/plan.md and todo.md. Researches current best practice and plans the better design rather than the minimal patch, writes a checkable Quality bar, and cuts vertical slices, each Backend then Frontend, with an R-id coverage matrix and no unresolved decisions. Use when the user runs it or tk-workflow routes to it."
+argument-hint: "[legacy intent ID]"
 metadata:
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # tk-plan
@@ -18,12 +18,12 @@ Read `docs/agents/tk-workflow.md` first (docs paths, packages, verify commands, 
 
 ## 1. Preconditions
 
-- **Intent**: the argument, or the single intent without `## Outcome` outside `archived/`; several → ask. If its `## Open questions` is non-empty, offer to run `tk-grill` on it first; the human may decline.
+- **Intent**: `<tasks>/intent.md`. When it does not exist: a legacy intent under the intents path without `## Outcome`, given as the argument or named by `plan.md` frontmatter `intent:`; none → point at `/tk-intent`. If its `## Open questions` is non-empty, offer to run `tk-grill` on it first; the human may decline.
 - **Approval**: entered through the driver's `다음` / `next`, that keyword is the approval. Invoked directly, ask "이 intent 로 계획을 세울까요?" and wait for an explicit yes.
-- **Active plan**: if `plan.md` is filled for a *different* intent, in any state (tasks open, all checked, verified, awaiting signoff), **stop and ask**. Only `tk-signoff` clears the working files; until then another session may be mid-build or its verification record is still needed. Never overwrite them on your own.
+- **Active plan**: if `plan.md` is filled for a *different* intent (a legacy `plan.md` whose frontmatter `intent:` names another file), in any state (tasks open, all checked, verified, awaiting signoff), **stop and ask**. Only `tk-signoff` clears the working files; until then another session may be mid-build or its verification record is still needed. Never overwrite them on your own.
 - **Same intent, plan already filled** (re-planning): treat it as a revision. Keep `## Decision Log` and `## Discovered`, redraft the sections the request names, and re-run step 4 only for decisions the redraft reopened. If any box in `todo.md` is checked, stop and ask; implemented work is not re-planned silently.
 
-Done when the intent is approved and `docs/tasks/` is free.
+Done when the intent is approved and `plan.md` / `todo.md` hold no other work.
 
 ## 2. Read and research
 
@@ -62,10 +62,7 @@ Summarize: design direction (current → target, with references), slices, task 
 ## plan.md template
 
 ```markdown
----
-intent: AGENT001-tenant-export
----
-# Plan · AGENT001 Tenant data export
+# Plan · Tenant data export
 
 ## Summary
 ## Design direction
@@ -104,7 +101,7 @@ Behaviour checks: <how each R-id is observed>
 ## todo.md template
 
 ```markdown
-# Todo · AGENT001-tenant-export
+# Todo · Tenant data export
 
 ## Slice 1: <behaviour>
 ### Backend

@@ -1,17 +1,18 @@
 ---
-id: {{ID}}
-slug: {{SLUG}}
+module:
 created: {{DATE}}
 updated: {{DATE}}
 ---
-# {{ID}} · {{TITLE}}
+# {{TITLE}}
 
 <!--
 사람이 먼저 씁니다. 각 섹션 첫 줄의 이런 주석은 안내문이고, 내용이 채워진 섹션의
 주석은 tk-intent 가 지웁니다.
 완벽하지 않아도 됩니다. 비워 둔 섹션은 tk-intent 가 인터뷰에서 묻습니다.
 코드를 읽으면 알 수 있는 사실은 묻지 않습니다.
-다 쓰면: /tk-intent {{ID}}
+이 파일은 작업하는 동안 이 자리에 있고, signoff 때 ID(예: AGENT001)를 받아
+intents 폴더로 옮겨집니다.
+다 쓰면: /tk-intent
 -->
 
 ## Background

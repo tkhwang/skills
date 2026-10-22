@@ -9,7 +9,7 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 > You set the direction from your own intent and taste, and the agent sharpens it against the code and current best practice (intent, plan). Then you hand off the build (implement) and check the result together (verify, signoff).
 
 <p align="center">
-  <img src="./assets/readme/tk-workflow.svg" width="100%" alt="tk workflow: five stages (intent, plan, implement, verify, signoff) run left to right with a human approval gate between each, in three parts: you lead and AI sharpens (intent, plan), hand off (implement), check together (verify, signoff); runs with one agent, others join for review and debate; intents are permanent, tasks are per piece of work, specs describe current behaviour">
+  <img src="./assets/readme/tk-workflow.svg" width="100%" alt="tk workflow: five stages (intent, plan, implement, verify, signoff) run left to right with a human approval gate between each, in three parts: you lead and AI sharpens (intent, plan), hand off (implement), check together (verify, signoff); runs with one agent, others join for review and debate; the intent, plan and todo live in docs/tasks while the work is open, signoff moves the intent to docs/intents under its ID and empties the rest, and you commit after signoff; specs describe current behaviour">
 </p>
 
 ## What it is
@@ -18,7 +18,7 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 - **A human gate at every stage.** A stage saves its artifact, prints a summary, and ends the turn. The next stage starts only on an explicit "next".
 - **Quality is asked for, then audited.** The plan aims for the better design, not the smallest patch: it compares the current structure with current best practice, cites its sources, and writes a checkable Quality bar. Implementation builds to that bar and cleans up as it goes, and `tk-check` runs the repo's typecheck, lint, format and tests at every boundary, fixing what fails without silencing the tools. Verification takes no checkbox or green run on trust: it opens the code and reads the tests, alone or with peer agents auditing independently.
 - **Multi-agent review and debate.** The flow runs with one agent. Say `review` or `debate` and other agents (claude, codex, grok) read the artifact or argue a decision, read-only; their answers land in files, and one agent still does all the editing.
-- **The agent never commits.** It reads git, it does not write it. Commits, pushes, and branches are yours. The one exception is `tk-fix-pr`, outside the flow, on a PR you hand it, after you approve.
+- **The agent never commits.** It reads git, it does not write it. Commits, pushes, and branches are yours, and the commit point is right after signoff. The one exception is `tk-fix-pr`, outside the flow, on a PR you hand it, after you approve.
 
 ## Skills
 
@@ -28,11 +28,11 @@ tkhwang's personal [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 |-------|-------|--------------|
 | [`tk-setup`](tk-setup/) | once per repo | Explores the repo and writes `docs/agents/tk-workflow.md`: layout, docs paths, module codes, verify commands, peers. |
 | [`tk-workflow`](tk-workflow/) | hub | Derives the current stage from the files, routes to the next skill, and drives the flow with `next` / `revise:` / `all` · `slice` / `check` / `verify` / `review` / `debate`. |
-| [`tk-intent`](tk-intent/) | [0] | `/tk-intent AGENT "title"` scaffolds `AGENT001-slug.md` from a guided template; you write the draft; `/tk-intent AGENT001` reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, …; `/tk-intent archive AGENT001` records why an intent was dropped and moves it to `archived/`. |
+| [`tk-intent`](tk-intent/) | [0] | `/tk-intent "title"` scaffolds `docs/tasks/intent.md` from a guided template; you write the draft; `/tk-intent` again reads it against the code, asks the important gaps, numbers requirements as `R1`, `R2`, … and settles the module. The intent gets its ID only when it leaves `docs/tasks/`: at signoff as `docs/intents/AGENT001-slug.md`, or through `/tk-intent archive`, which records why it was dropped and moves it to `archived/`. |
 | [`tk-plan`](tk-plan/) | [1] | Turns the intent into `docs/tasks/plan.md` + `todo.md`. Researches current best practice and plans the better design rather than the minimal patch (Design direction, with references), writes a checkable Quality bar, and cuts vertical slices, each Backend → Frontend, with an R-id coverage matrix and no open decisions. |
 | [`tk-implement`](tk-implement/) | [2] | Works `todo.md` in order, building each task completely to the Quality bar and checking boxes with evidence. Before the first task `tk-check baseline` records what already fails. Every Backend / Frontend sub-phase ends with a cleanup pass and a `tk-check phase` checkpoint; every slice adds `tk-check slice` and a `tk-verify slice` audit, and it fixes what they find itself. Runs to the end (`all`, the default) or stops after each slice (`slice`); either way it stops after a sub-phase that changes the database (`db: yes` in the plan). |
 | [`tk-verify`](tk-verify/) | [3] | Runs the repo's typecheck, lint (warnings fail), format check, tests and build through `tk-check` in report mode, plus the plan's behaviour checks, then audits the work itself: every task and R-id in the code, what each test really asserts (hardcoded values, mocked subjects, skipped tests), the Quality bar, and leftover mess. `/tk-verify codex grok` adds independent peer audits whose findings are confirmed in the repo before they count. Records results per R-id in `plan.md`, and never edits code. With `slice` it is the mid-build audit `tk-implement` runs after `tk-check slice`: that slice's behaviour checks and audit, an `audit:` line in `todo.md`. |
-| [`tk-signoff`](tk-signoff/) | [4] | Traces every R-id through plan, diff, and verification. Go / No-Go. On Go: appends the intent Outcome, updates module specs, empties `docs/tasks/`. |
+| [`tk-signoff`](tk-signoff/) | [4] | Traces every R-id through plan, diff, and verification. Go / No-Go. On Go: appends the intent Outcome, updates module specs, moves the intent to `docs/intents/<ID>-<slug>.md` and empties `docs/tasks/` without asking. You commit after signoff. |
 
 ### Single agent · other
 
@@ -55,16 +55,16 @@ Other agents join as read-only peers. The orchestrator stays the one agent that 
 
 ```text
 /tk-setup                       once per repo
-/tk-intent AGENT Tenant export  scaffold docs/intents/AGENT001-tenant-export.md (Korean template; append `en` for English)
+/tk-intent Tenant export        scaffold docs/tasks/intent.md (Korean template; append `en` for English)
 (you fill in the draft)
-/tk-intent AGENT001             interview → requirements R1…Rn
+/tk-intent                      interview → requirements R1…Rn, module
 next                            → /tk-plan: design direction, Quality bar, slices, decisions, coverage
 review                          → codex and grok read plan.md; findings patched or asked
 next                            → /tk-implement: Slice 1 Backend (migration) … stop
 next                            → Slice 1 Frontend → Slice 2 … to the end, cleanup and tk-check at every boundary (`slice`: stop per slice)
 verify codex grok               → /tk-verify: tk-check (tsc · eslint · prettier · tests), then audit by this agent + codex + grok (`next`: this agent alone)
-next                            → /tk-signoff: Go → specs updated, tasks emptied
-git commit                      yours
+next                            → /tk-signoff: Go → specs updated, intent → docs/intents/AGENT001-tenant-export.md, tasks emptied
+git commit                      yours, after signoff: code, intent, specs and the emptied tasks in one commit
 ```
 
 After the first `/tk-workflow` or stage command in a session, the plain words `next`, `revise: …`, `slice`, `all`, `check`, `verify`, `review`, `debate`, `status`, and `stop` keep the flow moving. Hedged answers ("looks fine") are not approval; the driver asks again.
@@ -73,7 +73,8 @@ After the first `/tk-workflow` or stage command in a session, the plain words `n
 
 | Path | Lifetime | Holds |
 |------|----------|-------|
-| `docs/intents/<MODULE><NNN>-<slug>.md` | permanent, one per change | why, what, non-goals, success criteria, `R`-numbered requirements, decision log, outcome |
+| `docs/tasks/intent.md` | current work only, moved at signoff | why, what, non-goals, success criteria, `R`-numbered requirements, module, decision log |
+| `docs/intents/<MODULE><NNN>-<slug>.md` | permanent, one per change | the intent as signed off: its ID, everything above, and the outcome |
 | `docs/intents/archived/` | permanent, dropped intents | the intent as it stood when dropped, plus `## Archived` (date, reason, superseding intents); ignored by every stage |
 | `docs/tasks/plan.md` | current work only | design direction, decisions, Quality bar, scope, slices, verification plan, R-id coverage, verification results and audit |
 | `docs/tasks/todo.md` | current work only | `base:` and `baseline:` lines, then `## Slice N` → `### Backend` / `### Frontend` → checkbox tasks with evidence, `cleanup:`, `checkpoint:` and `audit:` lines |
@@ -82,7 +83,7 @@ After the first `/tk-workflow` or stage command in a session, the plain words `n
 | `docs/specs/<module>/` | permanent | how each module behaves now, written in timeless language |
 | `docs/agents/tk-workflow.md` | per repo | the configuration `tk-setup` writes |
 
-`plan.md`, `todo.md`, `baseline.md`, `reviews/` and `debates/` are overwritten per piece of work and emptied at signoff; git history is the archive, so signoff asks before emptying files you have not committed, and the intent's Outcome keeps the verification and audit summary. Repos that already lay docs out differently keep their layout through `tk-setup`.
+`docs/tasks/` is the one piece of work in progress, one per worktree. Signoff empties it without asking: `intent.md` moves to `docs/intents/` under its new ID, `plan.md` and `todo.md` go back to placeholders, and `baseline.md`, `reviews/` and `debates/` are deleted. Commit after signoff: the code, the intent, the specs and the emptied `docs/tasks/` land in one commit, and the intent's Outcome keeps the verification and audit summary. Repos that already lay docs out differently keep their layout through `tk-setup`.
 
 ## Peer agents
 
@@ -101,7 +102,7 @@ npx skills add tkhwang/skills -s tk-setup,tk-workflow,tk-intent,tk-grill,tk-chec
 npx skills update
 ```
 
-Then, in a project: run `/tk-setup`, scaffold your first intent with `/tk-intent <MODULE> <title>`, fill it in, and run `/tk-intent <ID>`.
+Then, in a project: run `/tk-setup`, scaffold your first intent with `/tk-intent <title>`, fill it in, and run `/tk-intent` again.
 
 `tk-grill` works on its own. If [`mattpocock/skills`](https://github.com/mattpocock/skills) is installed, it follows that repo's `grilling` discipline for question ordering.
 

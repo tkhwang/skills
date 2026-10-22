@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="710" viewBox="0 0 1200 710" role="img" aria-labelledby="title desc">
   <title id="title">tk workflow: intent, plan, implement, verify, signoff</title>
-  <desc id="desc">Five stages run left to right in three parts: you lead and AI sharpens (intent, plan), you hand off the build (implement), and you check the result together (verify, signoff). Each stage reads a document and writes a document, and the human approves before the next stage. Intents are permanent, tasks are per piece of work and emptied at signoff, specs describe current behaviour. tk-check runs the repo's typecheck, lint, format, tests and build for implement and verify, and fixes what fails at every checkpoint.</desc>
+  <desc id="desc">Five stages run left to right in three parts: you lead and AI sharpens (intent, plan), you hand off the build (implement), and you check the result together (verify, signoff). Each stage reads a document and writes a document, and the human approves before the next stage. While the work is open the intent, plan and todo live in docs/tasks; signoff moves the intent to docs/intents under its ID and empties the rest, and the human commits after signoff. Specs describe current behaviour. tk-check runs the repo's typecheck, lint, format, tests and build for implement and verify, and fixes what fails at every checkpoint.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#5b8def"/>
@@ -94,30 +94,27 @@
         <text x="18" y="51" font-size="16" fill="#b4b9c3">tsc · eslint · prettier · tests · build</text>
       </g>
 
-      <!-- intents lane: permanent -->
+      <!-- tasks lane: the work in progress, intent through verify -->
       <g transform="translate(56 342)">
-        <rect width="196" height="96" rx="12" fill="#121722" stroke="#2a2f3a"/>
-        <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">writes · permanent</text>
-        <text x="16" y="58" fill="#e5e7eb">docs/intents/</text>
-        <text x="16" y="82" fill="#b4b9c3">AGENT001-slug.md</text>
+        <rect width="865" height="96" rx="12" fill="#121722" stroke="#2a2f3a"/>
+        <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">per piece of work · emptied at signoff, then you commit</text>
+        <text x="16" y="58" fill="#e5e7eb">docs/tasks/intent.md</text>
+        <text x="16" y="82" fill="#b4b9c3">moves at signoff</text>
+        <text x="296" y="58" fill="#e5e7eb">docs/tasks/plan.md</text>
+        <text x="296" y="82" fill="#b4b9c3">decisions · R-id coverage</text>
+        <text x="591" y="58" fill="#e5e7eb">docs/tasks/todo.md</text>
+        <text x="591" y="82" fill="#b4b9c3">- [x] T1.1 · evidence</text>
       </g>
 
-      <!-- tasks lane: spans plan, implement, verify -->
-      <g transform="translate(279 342)">
-        <rect width="642" height="96" rx="12" fill="#121722" stroke="#2a2f3a"/>
-        <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">per piece of work · overwritten, emptied at signoff</text>
-        <text x="16" y="58" fill="#e5e7eb">docs/tasks/plan.md</text>
-        <text x="16" y="82" fill="#b4b9c3">decisions · R-id coverage</text>
-        <text x="360" y="58" fill="#e5e7eb">docs/tasks/todo.md</text>
-        <text x="360" y="82" fill="#b4b9c3">- [x] T1.1 · evidence</text>
-      </g>
+      <!-- signoff moves the intent out of tasks -->
+      <line x1="921" y1="390" x2="946" y2="390" stroke="#5b8def" stroke-width="2" marker-end="url(#arrow)"/>
 
-      <!-- specs lane -->
+      <!-- permanent lane: signed-off intents and current-state specs -->
       <g transform="translate(948 342)">
         <rect width="196" height="96" rx="12" fill="#121722" stroke="#5b8def"/>
-        <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">updates · current state</text>
-        <text x="16" y="58" fill="#e5e7eb">docs/specs/</text>
-        <text x="16" y="82" fill="#b4b9c3">intent Outcome</text>
+        <text x="16" y="30" fill="#8a8f98" font-size="17" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">permanent</text>
+        <text x="16" y="58" fill="#e5e7eb">docs/intents/</text>
+        <text x="16" y="82" fill="#e5e7eb">docs/specs/</text>
       </g>
     </g>
 

@@ -3,7 +3,7 @@ name: tk-multi-review
 description: "Have peer agents (claude, codex, grok) review the current tk stage's artifact: intent, plan, implementation diff, or verification record. Collects each review as a file, triages findings into patches or tk-grill questions. Use when the user asks for a peer or multi-agent review of a stage, or the driver receives 리뷰 / review."
 argument-hint: "[intent | plan | implement | verify | <path>] [peer…]"
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # tk-multi-review
@@ -20,7 +20,7 @@ The argument names the stage or a path. No argument → derive the stage from th
 
 | Stage | Artifact the peer reads | Also in scope |
 |---|---|---|
-| `intent` | the active intent | specs of the modules it names |
+| `intent` | `<tasks>/intent.md` (a legacy intent when that file does not exist) | specs of the modules it names |
 | `plan` | `plan.md`, `todo.md` | the intent |
 | `implement` | the change as `tk-verify` §1 defines it: per repository, `git diff` against its `base:` entry in `todo.md` plus untracked files | `todo.md`, `plan.md`, the intent |
 | `verify` | `plan.md` `## Verification` | `todo.md`, the raw outputs it cites |

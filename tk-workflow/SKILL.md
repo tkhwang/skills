@@ -1,10 +1,10 @@
 ---
 name: tk-workflow
 description: "Hub and driver for the tk staged workflow: shows where work stands, routes to the next tk-* stage, and runs the next / revise / all / slice keyword protocol."
-argument-hint: "[status | start [<MODULE> <title> [ko|en]] | next | all | slice]"
+argument-hint: "[status | start [<title> [ko|en]] | next | all | slice]"
 disable-model-invocation: true
 metadata:
-  version: "0.6.0"
+  version: "0.7.0"
 ---
 
 # tk-workflow
@@ -13,11 +13,14 @@ Five stages, state derived from files. One agent drives; peers join for review a
 
 ```
  [0] tk-intent ─▶ [1] tk-plan ─▶ [2] tk-implement ─▶ [3] tk-verify ─▶ [4] tk-signoff
-   docs/intents     docs/tasks       code + todo.md      plan.md          intent Outcome,
-   (permanent)      plan.md,todo.md  checkboxes          ## Verification  specs, empty tasks
+   intent.md        plan.md,todo.md  code + todo.md      plan.md          intent → docs/intents/<ID>,
+   (docs/tasks)     (docs/tasks)     checkboxes          ## Verification  specs, empty docs/tasks
+                                                                          ──▶ the human commits
 ```
 
-`tk-grill` is the shared interview used by `tk-intent` and `tk-plan`. `tk-check` is the shared mechanical gate: it runs the repo's typecheck, lint, format, tests and build and fixes what they report; `tk-implement` calls it at every boundary, `tk-verify` in report mode, and it works on its own. `tk-intent archive <ID>` takes a dropped intent out of the flow into `archived/`. `tk-setup` writes the per-repo config. `tk-multi-review` and `tk-multi-debate` bring peer agents (claude, codex, grok) in at any gate; they read, the orchestrating agent writes.
+`docs/tasks/` holds the one piece of work in progress: `intent.md`, `plan.md`, `todo.md`. Signoff empties it without asking (the intent moves to `docs/intents/<MODULE><NNN>-<slug>.md`, the rest is reset) and the human commits after signoff.
+
+`tk-grill` is the shared interview used by `tk-intent` and `tk-plan`. `tk-check` is the shared mechanical gate: it runs the repo's typecheck, lint, format, tests and build and fixes what they report; `tk-implement` calls it at every boundary, `tk-verify` in report mode, and it works on its own. `tk-intent archive` takes a dropped intent out of the flow into `archived/`. `tk-setup` writes the per-repo config. `tk-multi-review` and `tk-multi-debate` bring peer agents (claude, codex, grok) in at any gate; they read, the orchestrating agent writes.
 
 ## Config
 
@@ -27,11 +30,10 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 
 | Observation | Stage | Next |
 |---|---|---|
-| `plan.md` empty, no intent file at all | before start | `tk-intent <MODULE> <title>` (scaffold) |
-| intent without `## Outcome` whose human sections (Background, Goal, Success criteria, Requirements) are all empty: only the template's guide comment, blank lines, or a bare `- ` (the same test `tk-intent` uses) | intent scaffolded | the human writes the draft, then `tk-intent <ID>` |
-| `plan.md` empty, every intent has `## Outcome` | done | new intent (`tk-intent`) |
-| intent without `## Outcome` whose requirements are not all `R`-numbered with an acceptance criterion, `plan.md` empty | intent drafted | `tk-intent` (interview) |
-| intent without `## Outcome`, every requirement `R`-numbered with an acceptance criterion, `plan.md` empty | intent written | `tk-plan` (which offers `tk-grill` if `## Open questions` is non-empty) |
+| no `intent.md`, `plan.md` empty | no active work | `tk-intent <title>` (scaffold) |
+| `intent.md` whose human sections (Background, Goal, Success criteria, Requirements) are all empty: only the template's guide comment, blank lines, or a bare `- ` (the same test `tk-intent` uses) | intent scaffolded | the human writes the draft, then `tk-intent` |
+| `intent.md` whose requirements are not all `R`-numbered with an acceptance criterion, `plan.md` empty | intent drafted | `tk-intent` (interview) |
+| `intent.md` with every requirement `R`-numbered with an acceptance criterion, `plan.md` empty | intent written | `tk-plan` (which offers `tk-grill` if `## Open questions` is non-empty) |
 | `plan.md` filled, 0 boxes checked in `todo.md` | plan written | `tk-implement` (`next` is the approval; asks when invoked directly) |
 | some boxes checked | implementing | `tk-implement` continues |
 | all boxes checked, no `## Verification` in `plan.md` | implemented | `tk-verify` |
@@ -41,13 +43,15 @@ Read `docs/agents/tk-workflow.md` first. If missing, show the defaults (single p
 | `## Verification` has no `### Audit` (recorded before audits existed) | re-verify | `tk-verify` |
 | `## Verification` with `### Audit`, no `fail` row, `stale: no` (`note`, `discovered`, `rejected` do not block) | verified | `tk-signoff` |
 
-The first matching row from the top wins. "Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `plan.md` frontmatter `intent:` names the active intent (`AGENT001-tenant-export`). Several intents may exist without Outcome; the active one is the one `plan.md` names. Intents under the intents path's `archived/` folder were dropped with `tk-intent archive` and do not count anywhere in this table or in `status`.
+The first matching row from the top wins. `intent.md`, `plan.md` and `todo.md` are under the tasks path (default `docs/tasks/`). "Empty" means `plan.md` is missing or holds only the placeholder `tk-signoff` writes (`_No active work…_`). `intent.md` is the active intent, at most one per worktree. Files under the intents path are signed off (`## Outcome`) or dropped (`archived/`) and count nowhere in this table.
+
+Legacy: with no `intent.md`, an intent under the intents path without `## Outcome` that `plan.md` frontmatter `intent:` names (work started before intents lived in `docs/tasks/`) is the active intent, read in place by the same rows.
 
 ## Commands
 
-**`status`** (default). Derive the row above for the active intent, list other intents without Outcome, and print the next slash command. Done when the user can see stage and next step in under ten lines.
+**`status`** (default). Derive the row above, name in one line any legacy intents without `## Outcome` under the intents path, and print the next slash command. Done when the user can see stage and next step in under ten lines.
 
-**`start [<MODULE> <title> [ko|en]]`**. Hand off to `tk-intent` with the arguments; without them `tk-intent` asks module, title and language. It copies the intent template to a new file and ends the turn; the human writes the first draft, then runs `tk-intent <ID>`.
+**`start [<title> [ko|en]]`**. Hand off to `tk-intent` with the arguments; without a title `tk-intent` asks for it. It copies the intent template to `docs/tasks/intent.md` and ends the turn; the human writes the first draft, then runs `tk-intent` again.
 
 **`next`**. Derive the stage and invoke the next skill with the Skill tool. Done when that skill has ended its turn.
 
@@ -74,7 +78,8 @@ Approval is explicit. "알아서 해" and "whatever you think" are delegation: o
 - **Ask for quality, then audit it.** `tk-plan` aims for the better design, not the minimal change: it compares the current structure with current best practice, cites its sources, and writes a checkable Quality bar. `tk-implement` builds to that bar completely and cleans up at every boundary. `tk-verify` takes no checkbox, no "done" and no green run on trust: it opens the code and the tests, alone or with peers.
 - **Turn boundary.** A stage saves its artifact, prints a short summary and the next command, and ends the turn. One stage per turn. A checkpoint a stage invokes mid-run (`tk-implement` → `tk-check baseline` / `phase` / `slice`, `tk-verify slice`) belongs to that stage's turn and does not end it.
 - **Approval lives in conversation**, checked by the next stage at its start, never stored in files. `다음` / `next` **is** the approval: a stage entered through the driver does not ask "shall I start?" again; a stage invoked directly by its slash command does.
-- **One active work item.** Parallel work uses git worktrees, which gives each its own `plan.md`.
+- **One active work item.** Parallel work uses git worktrees, which gives each its own `docs/tasks/`: `intent.md`, `plan.md`, `todo.md`.
+- **Commit after signoff.** `tk-signoff` empties `docs/tasks/` on Go without asking: the intent moves to the intents path under its ID, `plan.md` and `todo.md` go back to placeholders, the rest is deleted. The human then commits the code, the intent, the specs and the emptied `docs/tasks/` together. No stage asks the human to commit first.
 - **git is read-only for the agent**: `status`, `diff`, `log`. Commits, pushes, stashes, checkouts are the human's.
 - **Commands come from the repo** (config, `package.json`, CI), discovered and run by `tk-check`. Warnings fail; a tool is never silenced to pass, and what failed before the work is reported, not fixed. Run a command again only after code changed.
 - **Language**: talk to the user in the config's conversation language; write documents in the config's document language; keep code, identifiers and commands untranslated.

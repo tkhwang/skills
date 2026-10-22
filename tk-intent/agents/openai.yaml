@@ -1,4 +1,4 @@
 interface:
   display_name: "tk Intent"
   short_description: "Scaffold an intent from the template, then strengthen the human-written draft through a focused interview"
-  default_prompt: "Use $tk-intent. With no arguments, ask me module, title and language (ko default) and scaffold. With <MODULE> <title>, scaffold a new intent file from the template and stop so I can write it. With an intent id, read my draft against the codebase, ask me only the important missing decisions one at a time, and patch the document in place. With archive <ID>, record why the intent was dropped and move it to archived/."
+  default_prompt: "Use $tk-intent. With no docs/tasks/intent.md yet, ask me the title (or take it from the arguments) and scaffold docs/tasks/intent.md from the template (ko default, en on request), then stop so I can write it. Once I have written it, read my draft against the codebase, ask me only the important missing decisions one at a time, settle the module, and patch the document in place. Never overwrite an intent in progress. With archive, record why the intent was dropped, give it its ID and move it to the intents archived/ folder."

@@ -4,7 +4,7 @@ description: "Configure a repo for the tk-* workflow skills: layout, docs paths,
 argument-hint: "[optional notes about the repo]"
 disable-model-invocation: true
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # tk-setup
@@ -65,9 +65,9 @@ Done when both files exist and the config has no unresolved question marks. Tell
   - app → .                       # name → path (one row per package)
 
 ## Docs
-- intents: docs/intents/          # may contain {module} (lowercase module code)
+- intents: docs/intents/          # signed-off intents, moved here at signoff; may contain {module} (lowercase module code)
 - specs:   docs/specs/{module}/   # one file per topic inside a module
-- tasks:   docs/tasks/            # plan.md and todo.md, always one location
+- tasks:   docs/tasks/            # intent.md, plan.md, todo.md: the work in progress, emptied at signoff; always one location
 
 ## Modules
 | code  | name | code locations |

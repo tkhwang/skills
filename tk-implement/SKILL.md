@@ -3,7 +3,7 @@ name: tk-implement
 description: "Stage [2] of the tk workflow: implement docs/tasks/todo.md task by task, completely and to the plan's Quality bar rather than minimally, checking boxes with evidence. Before the first task tk-check records a baseline of what already fails. Every Backend/Frontend sub-phase ends with a cleanup pass and a tk-check phase checkpoint (typecheck, lint, format, related tests, fixed in place), and every slice with tk-check slice and a tk-verify slice audit, each self-fixed up to three rounds. all (the default) runs to the end; slice stops after each slice. Either mode stops after a sub-phase that changed the database. Use when the user runs it or tk-workflow routes to it."
 argument-hint: "[all | slice]"
 metadata:
-  version: "0.5.0"
+  version: "0.5.1"
 ---
 
 # tk-implement
@@ -23,7 +23,7 @@ Read `docs/agents/tk-workflow.md` first (packages and their paths, verify comman
 - `plan.md` Decision Log shows no open decision; otherwise stop and point at `tk-grill`.
 - `plan.md` has a `## Quality bar`. A plan written without one: offer to add it through `tk-plan` (a revision; recommended), or to write it now from the repo's own conventions, each line naming the file that shows the convention, and confirm it with the human before the first task. Either way the bar is in `plan.md` before code is written.
 - If no box is checked yet: entered through the driver's `다음` / `next`, that keyword is the approval; invoked directly, ask "이 plan 으로 구현을 시작할까요?" and wait for an explicit yes.
-- Run `git status --porcelain` in each repository in scope (each package path's repository and the docs home's). Report uncommitted changes outside `docs/` in one line and ask whether to proceed. Inform only; the human owns commits.
+- If no box is checked yet, run `git status --porcelain` in each repository in scope (each package path's repository and the docs home's). Report uncommitted changes outside `docs/` in one line and ask whether to proceed, since they would mix into the change. Once a box is checked, uncommitted changes are this work itself, which the human commits after signoff: do not ask again. Inform only; the human owns commits.
 - If no box is checked yet, write the `base:` line after `mode:` in `todo.md`: the `git rev-parse HEAD` of every repository in scope, in the format `tk-verify` §1 defines. It fixes what "the change" means for `tk-check`, `tk-verify`, `tk-signoff` and `tk-multi-review`; keep it until signoff.
 - Then, still before any code changes, invoke `tk-check baseline` with the Skill tool. It runs every check on the untouched tree and writes the `baseline:` line under `base:`: what already fails is reported at every checkpoint, never fixed, and never blocks one. Report a baseline that is not clean in one line and go on; `tk-verify` records it under Discovered. Work started without a `baseline:` line keeps going without one: the tree already holds the change, and `tk-check` falls back to its no-baseline rules.
 

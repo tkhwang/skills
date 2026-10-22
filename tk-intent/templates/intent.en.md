@@ -1,17 +1,18 @@
 ---
-id: {{ID}}
-slug: {{SLUG}}
+module:
 created: {{DATE}}
 updated: {{DATE}}
 ---
-# {{ID}} · {{TITLE}}
+# {{TITLE}}
 
 <!--
 You write this first. Each section starts with a guide comment like this one;
 tk-intent removes the comment once the section has content.
 It does not have to be complete. Leave a section empty and tk-intent will ask
 about it in the interview. It will not ask what the code can answer.
-When you are done: /tk-intent {{ID}}
+This file stays here while the work is open; at signoff it gets its ID
+(e.g. AGENT001) and moves to the intents folder.
+When you are done: /tk-intent
 -->
 
 ## Background

@@ -3,7 +3,7 @@ name: tk-grill
 description: "Interview the user, one important question at a time, to finalize a document (intent, plan, or any design doc), patching answers into it. Use when a tk-* stage needs open decisions resolved or the user asks to grill a document."
 argument-hint: "<path to document>"
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # tk-grill
@@ -26,7 +26,7 @@ List every gap or decision candidate. Keep only those passing the profile's impo
 
 | Profile | Chosen when | Ask about | Leave alone |
 |---|---|---|---|
-| intent | file under the configured intents path | vague success criteria, missing non-goals, scope boundary, conflicting or duplicate requirements, MUST vs SHOULD, hidden constraints, implementation detail written as requirement, several independent capabilities in one intent | how to build it, file layout, libraries |
+| intent | `intent.md` under the configured tasks path, or a file under the configured intents path | vague success criteria, missing non-goals, scope boundary, conflicting or duplicate requirements, MUST vs SHOULD, hidden constraints, implementation detail written as requirement, several independent capabilities in one intent | how to build it, file layout, libraries |
 | plan | `plan.md` under the configured tasks path | design direction (each structural proposal: the problem it removes, its reference, its cost), slice granularity and order, API / wire format, data model and migrations, authz, state machines, sync vs async, irreversible structure, conflicts with module specs, Quality bar lines that set a standard the human may want different, **new file or folder paths and names** | code style, test placement inside an approved path, checklist formatting |
 | other | anything else | anything whose change would move another document or contract | wording |
 

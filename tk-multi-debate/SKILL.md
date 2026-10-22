@@ -3,7 +3,7 @@ name: tk-multi-debate
 description: "Resolve one open decision by having peer agents (claude, codex, grok) argue it in written rounds, then synthesize the positions into a tk-grill question for the human. Use when a Decision Log has an open: entry worth contesting, the user asks for a debate, or the driver receives 토론 / debate."
 argument-hint: "[Q<n> | <decision in one sentence>]"
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # tk-multi-debate
@@ -16,7 +16,7 @@ Read `docs/agents/tk-workflow.md` first: `## Peers` (name, kind, role, optional 
 
 ## 1. Decision
 
-- `Q<n>` → that `open:` entry in the active artifact's `## Decision Log` (`plan.md`, else the active intent).
+- `Q<n>` → that `open:` entry in the active artifact's `## Decision Log` (`plan.md`, else `<tasks>/intent.md`).
 - A sentence → use it as the question; if an `open:` entry matches, link them.
 - No argument → list the `open:` entries and ask which one.
 

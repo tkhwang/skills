@@ -9,7 +9,7 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 > 방향은 내 의도와 취향으로 정하고, agent 는 코드와 업계 best practice 에 비추어 이를 보강합니다(intent, plan). 그다음 구현을 맡기고(implement), 결과를 함께 검증합니다(verify, signoff).
 
 <p align="center">
-  <img src="./assets/readme/tk-workflow.ko.svg" width="100%" alt="tk workflow: intent, plan, implement, verify, signoff 다섯 단계가 왼쪽에서 오른쪽으로 진행되고, 단계 사이마다 사람이 승인한다. 방향은 내가 정하고 AI가 보강하며(intent, plan), 구현은 맡기고(implement), 결과는 함께 검증한다(verify, signoff). agent 하나로 돌고, 다른 agent 는 리뷰와 토론에 들어온다. 작업 중에는 intent, plan, todo 가 docs/tasks 에 있고, signoff 가 intent 에 ID 를 붙여 docs/intents 로 옮기고 나머지를 비우며, commit 은 signoff 다음에 한다. specs 는 현재 동작을 기술한다">
+  <img src="./assets/readme/tk-workflow.ko.svg" width="100%" alt="tk workflow: intent, plan, implement, verify, signoff 다섯 단계가 왼쪽에서 오른쪽으로 진행되고, 단계 사이마다 사람이 승인한다. 방향은 내가 정하고 AI가 보강하며(intent, plan), 구현은 맡기고(implement), 결과는 함께 검증한다(verify, signoff). agent 하나로 돌고, 다른 agent 는 리뷰와 토론에 들어온다. 작업 중에는 intent, plan, todo 가 작업별 docs/tasks/slug 에 있고, signoff 가 intent 에 ID 를 붙여 docs/intents 로 옮기고 나머지를 비우며, commit 은 signoff 다음에 한다. specs 는 현재 동작을 기술한다">
 </p>
 
 ## 무엇인가
@@ -28,11 +28,11 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 |-------|------|---------|
 | [`tk-setup`](tk-setup/) | repo 당 1회 | repo 를 탐색해 `docs/agents/tk-workflow.md` 를 씁니다: 레이아웃, 문서 경로, 모듈 코드, 검증 커맨드, peer. |
 | [`tk-workflow`](tk-workflow/) | 허브 | 파일에서 현재 단계를 유도하고 다음 skill 로 라우팅합니다. `다음` / `수정:` / `all` · `slice` / `점검` / `검증` / `리뷰` / `토론` 으로 흐름을 몹니다. |
-| [`tk-intent`](tk-intent/) | [0] | `/tk-intent "제목"` 이 안내 주석이 있는 템플릿으로 `docs/tasks/intent.md` 를 만들고, 사람이 초안을 쓰면 `/tk-intent` 가 코드와 대조해 읽고 중요한 공백만 묻고, 요구사항에 `R1`, `R2`, … 번호를 붙이고 모듈을 정합니다. ID 는 intent 가 `docs/tasks/` 를 떠날 때 붙습니다: signoff 때 `docs/intents/AGENT001-slug.md` 로, 또는 폐기하면 `/tk-intent archive` 가 이유를 남기고 `archived/` 로 옮깁니다. |
-| [`tk-plan`](tk-plan/) | [1] | intent 를 `docs/tasks/plan.md` + `todo.md` 로 바꿉니다. 업계 best practice 를 조사해 최소 patch 가 아닌 더 나은 설계를 계획하고(Design direction, 근거 포함), 검사 가능한 Quality bar 를 적습니다. 세로 슬라이스, 슬라이스 안은 Backend → Frontend, R-id 커버리지 매트릭스, 미결 결정 0. |
+| [`tk-intent`](tk-intent/) | [0] | `/tk-intent "제목"` 이 안내 주석이 있는 템플릿으로 `docs/tasks/<slug>/intent.md` 를 만들고, 사람이 초안을 쓰면 `/tk-intent` 가 코드와 대조해 읽고 중요한 공백만 묻고, 요구사항에 `R1`, `R2`, … 번호를 붙이고 모듈을 정합니다. ID 는 intent 가 `docs/tasks/` 를 떠날 때 붙습니다: signoff 때 `docs/intents/AGENT001-slug.md` 로, 또는 폐기하면 `/tk-intent archive` 가 이유를 남기고 `archived/` 로 옮깁니다. |
+| [`tk-plan`](tk-plan/) | [1] | intent 를 `docs/tasks/<slug>/plan.md` + `todo.md` 로 바꿉니다. 업계 best practice 를 조사해 최소 patch 가 아닌 더 나은 설계를 계획하고(Design direction, 근거 포함), 검사 가능한 Quality bar 를 적습니다. 세로 슬라이스, 슬라이스 안은 Backend → Frontend, R-id 커버리지 매트릭스, 미결 결정 0. |
 | [`tk-implement`](tk-implement/) | [2] | `todo.md` 를 순서대로, 각 task 를 Quality bar 까지 빠짐없이 구현하고 증거와 함께 체크합니다. 첫 task 전에 `tk-check baseline` 이 이미 실패하던 것을 기록합니다. Backend / Frontend 소단계가 끝날 때마다 정리(cleanup)와 `tk-check phase` 체크포인트를, slice 가 끝날 때마다 `tk-check slice` 와 `tk-verify slice` 감사를 돌리고, 나온 문제는 스스로 고칩니다. 기본 `all` 은 끝까지, `slice` 는 slice 마다 멈춥니다. 어느 모드든 DB 를 바꾼 소단계(plan 의 `db: yes`) 뒤에는 멈춥니다. |
 | [`tk-verify`](tk-verify/) | [3] | repo 의 typecheck, lint(warning 도 실패), format 검사, 테스트, build 를 `tk-check` report 모드로, plan 의 동작 검증과 함께 실행한 뒤 작업 자체를 감사합니다: 모든 task 와 R-id 를 코드에서 직접 확인하고, 테스트가 실제로 무엇을 assert 하는지(하드코딩된 값, mock 된 대상, skip 된 테스트), Quality bar, 남은 지저분함을 봅니다. `/tk-verify codex grok` 이면 peer 들이 독립적으로 감사하고, 그 지적은 repo 에서 확인된 것만 인정합니다. 결과는 R-id 별로 `plan.md` 에 기록하고, 코드는 고치지 않습니다. `slice` 를 주면 `tk-implement` 가 `tk-check slice` 다음에 돌리는 구현 중간 감사가 됩니다: 그 slice 의 동작 검증과 감사를 하고 `todo.md` 에 `audit:` 줄을 남깁니다. |
-| [`tk-signoff`](tk-signoff/) | [4] | 모든 R-id 를 plan, diff, 검증 결과로 추적합니다. Go / No-Go. Go 면 intent 에 Outcome 추가, 모듈 spec 갱신, intent 를 `docs/intents/<ID>-<slug>.md` 로 옮기고 `docs/tasks/` 를 묻지 않고 비움. commit 은 signoff 다음에 사람이 합니다. |
+| [`tk-signoff`](tk-signoff/) | [4] | 모든 R-id 를 plan, diff, 검증 결과로 추적합니다. Go / No-Go. Go 면 intent 에 Outcome 추가, 모듈 spec 갱신, intent 를 `docs/intents/<ID>-<slug>.md` 로 옮기고 선택한 task 의 임시 산출물만 삭제. commit 은 signoff 다음에 사람이 합니다. |
 
 ### Single agent · 기타
 
@@ -55,7 +55,7 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 
 ```text
 /tk-setup                       repo 당 1회
-/tk-intent 테넌트 내보내기         템플릿으로 docs/tasks/intent.md 생성 (기본 한글, 끝에 `en` 이면 영문)
+/tk-intent 테넌트 내보내기         템플릿으로 docs/tasks/<slug>/intent.md 생성 (기본 한글, 끝에 `en` 이면 영문)
 (초안을 직접 채움)
 /tk-intent                      인터뷰 → 요구사항 R1…Rn, 모듈
 다음                            → /tk-plan: 설계 방향, Quality bar, 슬라이스, 결정, 커버리지
@@ -63,8 +63,8 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 다음                            → /tk-implement: Slice 1 Backend (migration) … 멈춤
 다음                            → Slice 1 Frontend → Slice 2 … 끝까지, 경계마다 정리와 tk-check (`slice`: slice 마다 멈춤)
 검증 codex grok                 → /tk-verify: tk-check (tsc · eslint · prettier · tests), 이어서 이 agent + codex + grok 이 감사 (`다음`: 이 agent 혼자)
-다음                            → /tk-signoff: Go → spec 갱신, intent → docs/intents/AGENT001-tenant-export.md, tasks 비움
-git commit                      signoff 다음에 사람이: 코드, intent, spec, 비워진 tasks 를 한 commit 으로
+다음                            → /tk-signoff: Go → spec 갱신, intent → docs/intents/AGENT001-tenant-export.md, 해당 task 정리
+git commit                      signoff 다음에 사람이: 코드, intent, spec, 해당 task 정리 내역을 한 commit 으로
 ```
 
 세션에서 `/tk-workflow` 나 단계 커맨드를 한 번 실행한 뒤에는 `다음`, `수정: …`, `slice`, `all`, `점검`, `검증`, `리뷰`, `토론`, `상태`, `중단` 만으로 흐름이 이어집니다. "괜찮은 듯" 같은 애매한 답은 승인으로 치지 않고 다시 묻습니다.
@@ -73,17 +73,19 @@ git commit                      signoff 다음에 사람이: 코드, intent, spe
 
 | 경로 | 수명 | 내용 |
 |------|------|------|
-| `docs/tasks/intent.md` | 현재 작업 동안만, signoff 때 이동 | 배경, 목표, 비목표, 성공 기준, `R` 번호 요구사항, 모듈, 결정 로그 |
+| `docs/tasks/<slug>/intent.md` | 현재 작업 동안만, signoff 때 이동 | 배경, 목표, 비목표, 성공 기준, `R` 번호 요구사항, 모듈, 결정 로그 |
 | `docs/intents/<MODULE><NNN>-<slug>.md` | 영구, 변경당 1개 | signoff 된 intent: ID, 위 내용 전부, 결과(Outcome) |
 | `docs/intents/archived/` | 영구, 폐기한 intent | 폐기 당시의 intent 와 `## Archived` (날짜, 이유, 대체한 intent). 모든 단계가 무시함 |
-| `docs/tasks/plan.md` | 현재 작업 동안만 | 설계 방향, 결정, Quality bar, 범위, 슬라이스, 검증 계획, R-id 커버리지, 검증 결과와 감사 |
-| `docs/tasks/todo.md` | 현재 작업 동안만 | `base:` 와 `baseline:` 줄, 이어서 `## Slice N` → `### Backend` / `### Frontend` → 증거가 붙은 체크박스 task, `cleanup:`, `checkpoint:`, `audit:` 줄 |
-| `docs/tasks/baseline.md` | 현재 작업 동안만 | 작업 시작 전부터 실패하던 것(type error, lint 메시지, 테스트). baseline 이 깨끗하지 않을 때만 |
-| `docs/tasks/reviews/`, `docs/tasks/debates/` | 현재 작업 동안만 | peer 별 프롬프트와 답변(리뷰와 검증 감사), 분류 결과, 토론 라운드와 종합 |
+| `docs/tasks/<slug>/plan.md` | 현재 작업 동안만 | 설계 방향, 결정, Quality bar, 범위, 슬라이스, 검증 계획, R-id 커버리지, 검증 결과와 감사 |
+| `docs/tasks/<slug>/todo.md` | 현재 작업 동안만 | `base:` 와 `baseline:` 줄, 이어서 `## Slice N` → `### Backend` / `### Frontend` → 증거가 붙은 체크박스 task, `cleanup:`, `checkpoint:`, `audit:` 줄 |
+| `docs/tasks/<slug>/baseline.md` | 현재 작업 동안만 | 작업 시작 전부터 실패하던 것(type error, lint 메시지, 테스트). baseline 이 깨끗하지 않을 때만 |
+| `docs/tasks/<slug>/reviews/`, `docs/tasks/<slug>/debates/` | 현재 작업 동안만 | peer 별 프롬프트와 답변(리뷰와 검증 감사), 분류 결과, 토론 라운드와 종합 |
 | `docs/specs/<module>/` | 영구 | 각 모듈이 지금 어떻게 동작하는지, 시제 없는 문장으로 |
 | `docs/agents/tk-workflow.md` | repo 당 | `tk-setup` 이 쓰는 설정 |
 
-`docs/tasks/` 는 진행 중인 작업 하나입니다(worktree 당 하나). signoff 는 묻지 않고 이를 비웁니다: `intent.md` 는 새 ID 를 받아 `docs/intents/` 로 옮겨지고, `plan.md` 와 `todo.md` 는 placeholder 로 돌아가고, `baseline.md`, `reviews/`, `debates/` 는 지워집니다. commit 은 signoff 다음에 합니다: 코드, intent, spec, 비워진 `docs/tasks/` 가 한 commit 에 들어가고, 검증과 감사 요약은 intent 의 Outcome 에 남습니다. 이미 다른 문서 레이아웃을 쓰는 repo 는 `tk-setup` 으로 그 레이아웃을 그대로 씁니다.
+`tasks_root`(기본 `docs/tasks/`) 아래에 작업마다 고유하고 고정된 slug 폴더를 만듭니다. 예를 들어 `docs/cpq-react-agent/tasks/tool-surface-policy/` 와 `docs/cpq-react-agent/tasks/insight-expert-generalization/` 을 동시에 사용할 수 있습니다. `/tk-intent "제목" --task tool-surface-policy` 로 시작하고, `/tk-plan --task tool-surface-policy` 처럼 선택합니다. 명시한 작업 → 현재 대화의 작업 → 유일한 활성 작업 순서로 선택하며, 여러 후보가 있으면 묻습니다. 공유 `current` 파일은 만들지 않습니다.
+
+Go 시 intent 의 Outcome 에 결과와 검증 요약, 남은 제약을 기록하고 `docs/intents/<ID>-<slug>.md` 로 옮깁니다. 해당 작업의 plan/todo/baseline/reviews/debates 를 삭제하고 빈 작업 폴더를 제거합니다. 별도 완료 보고서나 plan/todo 보관본은 만들지 않습니다. 작업 기록은 intent 만 남기며, 현재 동작의 기준은 module spec 입니다. 다른 task 폴더는 건드리지 않습니다. commit 은 signoff 다음에 사람이 합니다. 기존 `tasks:` 설정과 루트의 단일 작업 문서는 호환되며, 새 작업은 항상 slug 폴더에서 시작합니다.
 
 ## Peer agent
 

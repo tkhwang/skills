@@ -1,24 +1,28 @@
 ---
 name: tk-intent
-description: "Stage [0] of the tk workflow: scaffold docs/tasks/intent.md from the template for the human to write, then strengthen the human-written draft (why, what, non-goals, success criteria, R-id requirements, module) through a focused interview. The intent gets its ID only when it leaves docs/tasks: tk-signoff moves it to the intents folder once it ships; with archive, this skill moves a dropped one to archived/. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[<title> [ko|en] | archive [reason]]"
+description: "Stage [0] of the tk workflow: scaffold the selected task folder's intent.md from the template for the human to write, then strengthen the human-written draft (why, what, non-goals, success criteria, R-id requirements, module) through a focused interview. The intent gets its ID only when it leaves docs/tasks: tk-signoff moves it to the intents folder once it ships; with archive, this skill moves a dropped one to archived/. Use when the user runs it or tk-workflow routes to it."
+argument-hint: "[<title> [ko|en] | archive [reason]] [--task <slug|path>]"
 metadata:
-  version: "0.5.0"
+  version: "0.6.0"
 ---
 
 # tk-intent
 
 Two visits, one file. First visit: `/tk-intent <title> [ko|en]` (or bare `/tk-intent`, which asks the title) copies the template to `<tasks>/intent.md` and ends the turn; the human writes the draft. Second visit: bare `/tk-intent` reads the draft against the codebase, interviews the human about what is missing or ambiguous, and patches the document in place. It never generates an intent from a one-line request.
 
-`<tasks>/intent.md` is a working file, like `plan.md` and `todo.md`: it holds the one intent in progress and has no ID yet. The intent is named when it leaves `<tasks>`: `tk-signoff` moves it to `<intents dir>/<MODULE><NNN>-<slug>.md` once it ships, and `/tk-intent archive` (step 7) moves a dropped one to `archived/`.
+`<tasks>/intent.md` is a working file, like `plan.md` and `todo.md`: it holds this task's intent in progress and has no ID yet. The intent is named when it leaves `<tasks>`: `tk-signoff` moves it to `<intents dir>/<MODULE><NNN>-<slug>.md` once it ships, and `/tk-intent archive` (step 7) moves a dropped one to `archived/`.
+
+## Task context
+
+Before reading or writing workflow artifacts, follow [tk-workflow Task selection](../tk-workflow/SKILL.md#task-selection). Accept `--task <slug|path>`; `<tasks>` is the resolved selected task directory, not the tasks root. Pass that path to every nested skill and peer, and include it in the next command. Standalone helper exceptions are defined there.
 
 ## Config
 
-Read `docs/agents/tk-workflow.md` first: tasks path as `<tasks>` (default `docs/tasks/`), intents path, module codes, document language. If missing, show defaults and ask once per session, pointing at `/tk-setup`.
+Read `docs/agents/tk-workflow.md` first: tasks root (`tasks_root:`, default `docs/tasks/`), intents path, module codes, document language. If missing, show defaults and ask once per session, pointing at `/tk-setup`.
 
 ## Working file
 
-`<tasks>/intent.md`, one per worktree. `<tasks>` is **busy** when `intent.md` exists or `plan.md` is filled (anything but the placeholder `tk-signoff` writes). A busy `<tasks>` is never overwritten: a new intent waits until the current one is signed off or archived, or starts in another git worktree, which has its own `<tasks>`.
+`<tasks>/intent.md`, one per task slug. New work gets its own folder; existing task directories are never overwritten. Resume a selected task with bare `/tk-intent --task <slug>`; a title requests new work and follows the collision rule in Task selection.
 
 ## Path and filename (when the intent leaves `<tasks>`)
 
@@ -29,11 +33,11 @@ Read `docs/agents/tk-workflow.md` first: tasks path as `<tasks>` (default `docs/
 | `docs/intents/` | AGENT | `docs/intents/AGENT001-tenant-export.md` |
 | `docs/{module}/intents/` | AGENT | `docs/agent/intents/AGENT001-tenant-export.md` |
 
-The name is computed once, at the move: by `tk-signoff` when the intent ships, by step 7 when it is dropped. Never at scaffold time.
+The ID is computed at the move: by `tk-signoff` when the intent ships, by step 7 when it is dropped. The task slug is chosen at creation and reused at the move.
 
 - `MODULE`: frontmatter `module:`, settled in step 5. Empty → ask once, codes from the config's Modules table, recommended first. Unknown code → offer to add it to the config.
 - `NNN`: three digits, per module, max existing + 1, scanned in the resolved intents directory for that module, including its `archived/` folder, so an ID is never reused.
-- `slug`: short kebab-case English, from the H1 title as it stands at the move (translate if the title is not English). A title that is a single kebab-case token (`quote-approval-flow`) is used verbatim.
+- `slug`: the selected task folder's stable slug. For legacy flat work only, derive short English kebab-case from the title at the move. Recheck the destination and ID before moving; never overwrite another intent. Separate branches can still allocate the same numeric ID; reconcile that at integration, not by replacing a record.
 
 The move:
 
@@ -51,7 +55,7 @@ Sections, in order: Background, Goal, Non-goals, Success criteria, Constraints, 
 
 ## 0. Route
 
-The first token exactly `archive` → step 7. A single token or path naming an intent under the intents path (`AGENT001`, `AGENT001-tenant-export`) → **Legacy intents** below. Anything else is a title, with an optional last token `ko` / `en`.
+Resolve and strip `--task` by the shared Task selection contract first; for a title, choose a new task rather than inheriting the previous selection. The first remaining token exactly `archive` → step 7. A single token or path naming an intent under the intents path (`AGENT001`, `AGENT001-tenant-export`) → **Legacy intents** below. Anything else is a title, with an optional last token `ko` / `en`.
 
 | `<tasks>` | bare `/tk-intent` | `/tk-intent <title> [ko\|en]` |
 |---|---|---|
@@ -59,18 +63,22 @@ The first token exactly `archive` → step 7. A single token or path naming an i
 | `intent.md` exists | step 2 | refuse |
 | `plan.md` filled, no `intent.md` | legacy work: see Legacy intents | refuse |
 
-**Refuse**: name the work in progress (the intent's H1 and its stage) and the three ways on: continue it (`/tk-intent`), drop it (`/tk-intent archive`), or start the new intent in another git worktree. Change nothing and end the turn.
+**Refuse** applies only to a collision in the selected directory: name that work and offer to resume it, archive it, or choose a different slug. Other active tasks do not prevent creation. Change nothing until the collision is resolved.
 
 ## 1. Scaffold (first visit)
 
 ```text
-/tk-intent 테넌트 데이터 내보내기      → <tasks>/intent.md, Korean template
-/tk-intent Tenant data export en     → same file, English template
+/tk-intent 테넌트 데이터 내보내기 --task tenant-export
+  → docs/tasks/tenant-export/intent.md, Korean template
+/tk-intent Tenant data export en --task tenant-export
+  → same destination, English alternative (not a second creation)
+/tk-intent --task tenant-export
+  → resume that draft
 ```
 
 1. Compute `DATE` with `date -u +%Y-%m-%dT%H:%M:%S.000Z`, never a bare date. Keep `TITLE` exactly as given, without the language token.
-2. Copy the template to `<tasks>/intent.md`, substituting the placeholders. Create `<tasks>` if missing. Change nothing else; the guide comments stay.
-3. Print the path, the section list the human is expected to fill (Background … Requirements), and the command to come back with (`/tk-intent`).
+2. Copy the template to `<tasks>/intent.md`, substituting the placeholders. Create the selected new task directory; never reuse an existing directory for a new scaffold. Change nothing else; the guide comments stay.
+3. Print the path, the section list the human is expected to fill (Background … Requirements), and the command to come back with (`/tk-intent --task <slug>`).
 4. **End the turn.** Do not fill any section, do not start the interview.
 
 Done when the file exists and the human has the path.
@@ -92,7 +100,7 @@ Read the draft, then (read-only) the specs and code of the modules it names. Not
 
 Invoke `tk-grill` on the intent file. It applies the intent profile: ambiguous success criteria, missing non-goals, scope boundaries, conflicting requirements, MUST/SHOULD, hidden constraints, implementation detail posing as requirement, and whether the intent bundles several independently testable capabilities. Sections the human left empty are the first candidates. Answers are patched into the file by `tk-grill` with a Decision Log entry.
 
-A bundle is split, not carried: this intent keeps one capability, and each other one goes under `## Non-goals` as `follow-up intent: <one line>`. `tk-signoff` lists those as follow-ups; starting one now means another worktree.
+A bundle is split, not carried: this intent keeps one capability, and each other one goes under `## Non-goals` as `follow-up intent: <one line>`. `tk-signoff` lists those as follow-ups; starting one now means a different task slug, with another worktree when code isolation is needed.
 
 Done when `tk-grill` reports the frontier empty.
 
@@ -116,9 +124,9 @@ Print a five-line summary (goal, R-id count, module, non-goals and open question
 
 `/tk-intent archive [reason]` takes the intent in progress out of the workflow when it is dropped (requirements changed, replaced by other intents, no longer wanted).
 
-1. **Locate** `<tasks>/intent.md`. Missing → nothing to archive: say so and end the turn (an older intent under the intents path is Legacy). Still a scaffold (step 2 test) → nothing was written: delete the file, spend no ID, say so, and end the turn.
+1. **Locate** `<tasks>/intent.md`. Missing → nothing to archive: say so and end the turn (an older intent under the intents path is Legacy). Still a scaffold (step 2 test), with no filled plan/todo or other working artifacts → nothing was written: delete only the scaffold and remove its slug directory if empty (never the legacy root), clear its session selection and approval, spend no ID, say so, and end the turn. Otherwise continue through the archive flow.
 2. **Reason**: the rest of the argument, else ask once. Intent IDs that replace it (`AGENT004`) go on their own `superseded by` line.
-3. **Work in progress**: if `plan.md` is filled, show what will be discarded (checked / total boxes in `todo.md`, whether `## Verification` exists) and ask once. Yes → reset the working files the way `tk-signoff` does: placeholder `plan.md` and `todo.md`, `<tasks>/baseline.md` and the contents of `<tasks>/reviews/` and `<tasks>/debates/` deleted. No → end the turn with nothing changed. Code already changed stays; reverting it is the human's, with git. `plan.md` empty → no question.
+3. **Work in progress**: if `plan.md` is filled, show what will be discarded (checked / total boxes in `todo.md`, whether `## Verification` exists) and ask once. Yes → proceed to record and move the intent, then delete only this task's temporary artifacts using `tk-signoff` §4. Do not delete evidence before the intent is saved. No → end the turn with nothing changed. Code already changed stays; reverting it is the human's, with git. `plan.md` empty → no question.
 4. **Record**: append the section below and set frontmatter `updated`. Leave out the `superseded by` line when nothing replaces it. Change nothing else in the document.
 
    ```markdown
@@ -128,7 +136,7 @@ Print a five-line summary (goal, R-id count, module, non-goals and open question
    ```
 
 5. **Name and move** it to `<intents dir>/archived/<MODULE><NNN>-<slug>.md` by the Path and filename rule.
-6. **Stop**: print the new path, whether `plan.md` and `todo.md` were reset, and the files ready to commit. End the turn.
+6. **Clean and stop**: after the move succeeds, delete this task's plan/todo/baseline/reviews/debates by `tk-signoff` §4 and remove its directory if empty. Create no archive copies or replacement report. Print the intent's new path and the files ready to commit. Clear this task's session selection and approval; leave other tasks untouched. End the turn.
 
 Done when `<tasks>/intent.md` is gone and the intent is under `archived/` with an `## Archived` entry.
 
@@ -144,12 +152,12 @@ New intents always start in `<tasks>/intent.md`; a legacy intent is never moved 
 
 ## Verification
 
-- [ ] Scaffold wrote only the template, placeholders filled, at `<tasks>/intent.md`, computed no ID, slug or module, and ended the turn.
-- [ ] A busy `<tasks>` was never overwritten; the human got continue / archive / another worktree.
+- [ ] Scaffold wrote only the template, placeholders filled, at `<tasks>/intent.md`, chose a stable task slug but computed no ID or module, and ended the turn.
+- [ ] A busy `<tasks>` was never overwritten; the human got resume / archive / a different slug.
 - [ ] The human wrote the draft; this skill asked and patched. An empty scaffold was handed back, not filled.
 - [ ] Every requirement has an R-id, MUST/SHOULD, and an acceptance criterion; `module:` is set.
 - [ ] No file paths, library choices, or schemas outside Planning hints.
 - [ ] No guide comments left in the finalized document.
 - [ ] Turn ended after the summary; `tk-plan` was not started.
-- [ ] `archive` deleted an untouched scaffold without spending an ID; otherwise it appended `## Archived` with a reason, named the file and moved it under `archived/`, and reset `plan.md` / `todo.md` only after the human confirmed.
+- [ ] `archive` deleted an untouched scaffold without spending an ID; otherwise it appended `## Archived` with a reason, named the file and moved it under `archived/`, and deleted only the selected task's temporary artifacts after the move succeeded (with confirmation when a filled plan was present).
 - [ ] `NNN` numbering counted `archived/`; every other intent lookup ignored it.

@@ -1,18 +1,22 @@
 ---
 name: tk-multi-review
 description: "Have peer agents (claude, codex, grok) review the current tk stage's artifact: intent, plan, implementation diff, or verification record. Collects each review as a file, triages findings into patches or tk-grill questions. Use when the user asks for a peer or multi-agent review of a stage, or the driver receives 리뷰 / review."
-argument-hint: "[intent | plan | implement | verify | <path>] [peer…]"
+argument-hint: "[intent | plan | implement | verify | <path>] [peer…] [--task <slug|path>]"
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
 # tk-multi-review
 
 Ask one or more peer agents to read the artifact of the current stage and report findings. Each peer runs headless, read-only, in its own process; its answer lands in a file. This skill then triages: facts the artifact gets wrong are patched, decisions go to `tk-grill`, the rest is recorded. Peers never edit; only the orchestrating agent writes.
 
+## Task context
+
+Before reading or writing workflow artifacts, follow [tk-workflow Task selection](../tk-workflow/SKILL.md#task-selection). Accept `--task <slug|path>`; `<tasks>` is the resolved selected task directory, not the tasks root. Pass that path to every nested skill and peer, and include it in the next command. Standalone helper exceptions are defined there.
+
 ## Config
 
-Read `docs/agents/tk-workflow.md` first: `## Peers` (name, kind, role, optional command override) and the docs paths. `<tasks>` below is the configured tasks path (default `docs/tasks/`); peer files live under `<tasks>/reviews/`. No `## Peers` → ask once which of `claude`, `codex`, `grok` to use (list those found on `PATH`), offer to add the table to the config, then continue. Peers whose role is `review` or `any` take part; a `[peer…]` argument restricts to those names.
+Read `docs/agents/tk-workflow.md` first: `## Peers` (name, kind, role, optional command override) and the docs paths. `<tasks>` below is the selected task directory; peer files live under `<tasks>/reviews/`. No `## Peers` → ask once which of `claude`, `codex`, `grok` to use (list those found on `PATH`), offer to add the table to the config, then continue. Peers whose role is `review` or `any` take part; a `[peer…]` argument restricts to those names.
 
 ## 1. Target
 
@@ -79,7 +83,7 @@ Where it runs:
 Several peers run concurrently. Result file: `<tasks>/reviews/<stage>-<peer>.md`. Prepend a header once the process exits:
 
 ```markdown
-reviewer: codex · stage: plan · run: 2026-10-10 14:02 · artifact: docs/tasks/plan.md · command: default
+reviewer: codex · stage: plan · run: 2026-10-10 14:02 · artifact: docs/tasks/<slug>/plan.md · command: default
 ```
 
 Timeout 10 minutes per peer; on timeout or an empty file, record `result: no answer` in the header and move on.

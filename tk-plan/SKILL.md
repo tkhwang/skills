@@ -1,9 +1,9 @@
 ---
 name: tk-plan
-description: "Stage [1] of the tk workflow: turn docs/tasks/intent.md into docs/tasks/plan.md and todo.md. Researches current best practice and plans the better design rather than the minimal patch, writes a checkable Quality bar, and cuts vertical slices, each Backend then Frontend, with an R-id coverage matrix and no unresolved decisions. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[legacy intent ID]"
+description: "Stage [1] of the tk workflow: turn the selected task's intent.md into plan.md and todo.md in the same folder. Researches current best practice and plans the better design rather than the minimal patch, writes a checkable Quality bar, and cuts vertical slices, each Backend then Frontend, with an R-id coverage matrix and no unresolved decisions. Use when the user runs it or tk-workflow routes to it."
+argument-hint: "[legacy intent ID] [--task <slug|path>]"
 metadata:
-  version: "0.5.0"
+  version: "0.6.0"
 ---
 
 # tk-plan
@@ -11,6 +11,10 @@ metadata:
 Read the intent and the code, research how the problem is best solved today, write the plan and task list, resolve the decisions that matter with `tk-grill`, and stop for approval. Planning is read-only on code.
 
 Plan the design the change deserves, not the smallest patch on what exists. The current code is the starting point, not the standard: compare it with current industry practice, propose the better structure where the change needs it, and write down the quality the work must reach. You get the quality you ask for; `tk-implement` builds to this plan and `tk-verify` audits against it.
+
+## Task context
+
+Before reading or writing workflow artifacts, follow [tk-workflow Task selection](../tk-workflow/SKILL.md#task-selection). Accept `--task <slug|path>`; `<tasks>` is the resolved selected task directory, not the tasks root. Pass that path to every nested skill and peer, and include it in the next command. Standalone helper exceptions are defined there.
 
 ## Config
 

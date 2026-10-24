@@ -1,4 +1,4 @@
 interface:
   display_name: "tk Signoff"
   short_description: "Trace requirements to code, verification and audit, Go/No-Go, update specs"
-  default_prompt: "Use $tk-signoff: require a current verification record with its audit, trace every R-id through plan, diff, verification and the audit ledger, give a Go/No-Go, and on Go append the intent Outcome, update module specs, move the intent to the intents folder under its ID, and empty docs/tasks without asking me about commits; I commit after signoff."
+  default_prompt: "Use $tk-signoff: require a current verification record with its audit, trace every R-id through plan, diff, verification and the audit ledger, give a Go/No-Go, and on Go append the intent Outcome, update module specs, move the intent to the intents folder under its ID, and delete only that task's plan/todo/baseline/reviews/debates without replacement reports or archives and without asking me about commits; I commit after signoff."

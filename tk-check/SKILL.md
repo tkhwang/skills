@@ -1,9 +1,9 @@
 ---
 name: tk-check
 description: "Run the repo's own typecheck, lint (warnings fail), format check, tests and build on the current change; apply the formatter's and linter's write modes, then fix what still fails in the code itself, never by silencing a tool, up to three rounds. Failures that predate the change are reported, never fixed. tk-implement calls it before the first task (baseline) and at every sub-phase and slice boundary (phase, slice), tk-verify calls it to measure (all report), and it works on its own after any code change. Use when the user asks to check, lint, format, typecheck or test the change, or a tk-* stage calls it."
-argument-hint: "[phase | slice | all | baseline] [report | autofix]"
+argument-hint: "[phase | slice | all | baseline] [report | autofix] [--task <slug|path>]"
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # tk-check
@@ -30,9 +30,13 @@ Typecheck and build always run per package. Build runs on every scope except `ph
 
 **Turn.** Called by a stage (`tk-implement`, `tk-verify`), it reports and returns to that stage in the same turn, pass or fail; deciding where to stop is the caller's job. Run by the human, it ends the turn with the report.
 
+## Task context
+
+Before reading or writing workflow artifacts, follow [tk-workflow Task selection](../tk-workflow/SKILL.md#task-selection). Accept `--task <slug|path>`; `<tasks>` is the resolved selected task directory, not the tasks root. Pass that path to every nested skill and peer, and include it in the next command. Standalone helper exceptions are defined there.
+
 ## Config
 
-Read `docs/agents/tk-workflow.md` first: the packages and their paths, the Verify table, the tasks path (`<tasks>` below, default `docs/tasks/`). If it is missing, discover the commands (§2), show them in the report, and point at `/tk-setup` once per session; do not stop.
+Read `docs/agents/tk-workflow.md` first: the packages and their paths, the Verify table, the tasks root (`tasks_root:`, default `docs/tasks/`). If it is missing, discover the commands (§2), show them in the report, and point at `/tk-setup` once per session; do not stop.
 
 ## 1. The change
 

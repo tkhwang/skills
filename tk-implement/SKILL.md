@@ -1,16 +1,20 @@
 ---
 name: tk-implement
-description: "Stage [2] of the tk workflow: implement docs/tasks/todo.md task by task, completely and to the plan's Quality bar rather than minimally, checking boxes with evidence. Before the first task tk-check records a baseline of what already fails. Every Backend/Frontend sub-phase ends with a cleanup pass and a tk-check phase checkpoint (typecheck, lint, format, related tests, fixed in place), and every slice with tk-check slice and a tk-verify slice audit, each self-fixed up to three rounds. all (the default) runs to the end; slice stops after each slice. Either mode stops after a sub-phase that changed the database. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[all | slice]"
+description: "Stage [2] of the tk workflow: implement the selected task folder's todo.md task by task, completely and to the plan's Quality bar rather than minimally, checking boxes with evidence. Before the first task tk-check records a baseline of what already fails. Every Backend/Frontend sub-phase ends with a cleanup pass and a tk-check phase checkpoint (typecheck, lint, format, related tests, fixed in place), and every slice with tk-check slice and a tk-verify slice audit, each self-fixed up to three rounds. all (the default) runs to the end; slice stops after each slice. Either mode stops after a sub-phase that changed the database. Use when the user runs it or tk-workflow routes to it."
+argument-hint: "[all | slice] [--task <slug|path>]"
 metadata:
-  version: "0.5.1"
+  version: "0.6.0"
 ---
 
 # tk-implement
 
-Work the task list in order. Build each task completely, in the plan's design and to its Quality bar; verify it with its focused command; check it off with evidence; clean up and run a checkpoint at every sub-phase and slice boundary; and pause where the chosen mode or a gate says so the human can look. The agent changes code and `docs/tasks/`; it never changes git state.
+Work the task list in order. Build each task completely, in the plan's design and to its Quality bar; verify it with its focused command; check it off with evidence; clean up and run a checkpoint at every sub-phase and slice boundary; and pause where the chosen mode or a gate says so the human can look. The agent changes code and the selected `<tasks>`; it never changes git state.
 
 Working code is not finished code. The target is what the plan asked for, built well and left clean, not the least code that turns a test green.
+
+## Task context
+
+Before reading or writing workflow artifacts, follow [tk-workflow Task selection](../tk-workflow/SKILL.md#task-selection). Accept `--task <slug|path>`; `<tasks>` is the resolved selected task directory, not the tasks root. Pass that path to every nested skill and peer, and include it in the next command. Standalone helper exceptions are defined there.
 
 ## Config
 

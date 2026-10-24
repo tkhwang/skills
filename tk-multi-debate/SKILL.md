@@ -1,18 +1,22 @@
 ---
 name: tk-multi-debate
 description: "Resolve one open decision by having peer agents (claude, codex, grok) argue it in written rounds, then synthesize the positions into a tk-grill question for the human. Use when a Decision Log has an open: entry worth contesting, the user asks for a debate, or the driver receives 토론 / debate."
-argument-hint: "[Q<n> | <decision in one sentence>]"
+argument-hint: "[Q<n> | <decision in one sentence>] [--task <slug|path>]"
 metadata:
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # tk-multi-debate
 
 One decision, two or more peers, written rounds on disk. Each peer argues from the repo, read-only, without seeing the others until the rebuttal round. The orchestrating agent synthesizes, never votes, and hands the human a `tk-grill` question whose options carry the debate's evidence. The human decides.
 
+## Task context
+
+Before reading or writing workflow artifacts, follow [tk-workflow Task selection](../tk-workflow/SKILL.md#task-selection). Accept `--task <slug|path>`; `<tasks>` is the resolved selected task directory, not the tasks root. Pass that path to every nested skill and peer, and include it in the next command. Standalone helper exceptions are defined there.
+
 ## Config
 
-Read `docs/agents/tk-workflow.md` first: `## Peers` (name, kind, role, optional command override) and the docs paths. `<tasks>` below is the configured tasks path (default `docs/tasks/`); debate files live under `<tasks>/debates/`. Peers whose role is `debate` or `any` take part. Fewer than two → the orchestrator's own kind runs headless as the second seat, and the record says so (`seat: self`). No `## Peers` → ask once, as `tk-multi-review` does.
+Read `docs/agents/tk-workflow.md` first: `## Peers` (name, kind, role, optional command override) and the docs paths. `<tasks>` below is the selected task directory; debate files live under `<tasks>/debates/`. Peers whose role is `debate` or `any` take part. Fewer than two → the orchestrator's own kind runs headless as the second seat, and the record says so (`seat: self`). No `## Peers` → ask once, as `tk-multi-review` does.
 
 ## 1. Decision
 
@@ -24,7 +28,7 @@ Write `<tasks>/debates/<slug>.md`:
 
 ```markdown
 # Debate · <question>
-decision: Q3 · artifact: docs/tasks/plan.md · run: 2026-10-10 14:02 · peers: codex, grok
+decision: Q3 · artifact: docs/tasks/<slug>/plan.md · run: 2026-10-10 14:02 · peers: codex, grok
 ## Question
 ## Context
 - <intent R-ids and plan sections it touches> · <specs> · <code paths>

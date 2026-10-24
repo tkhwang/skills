@@ -1,9 +1,9 @@
 ---
 name: tk-verify
 description: "Stage [3] of the tk workflow: run the repo's typecheck, lint (warnings fail), format check, tests and build through tk-check in report mode, plus the plan's behaviour checks, then audit the work itself: every task and R-id in the code, what each test really asserts, the plan's Quality bar, and leftover mess. Named peers (claude, codex, grok) audit independently and the orchestrator confirms their findings. Results are recorded per R-id in plan.md. With slice it is the audit tk-implement calls at every slice boundary, right after tk-check slice: that slice's behaviour checks and audit, recorded in todo.md. Use when the user runs it or tk-workflow routes to it."
-argument-hint: "[fix] [claude | codex | grok …] | slice"
+argument-hint: "[fix] [claude | codex | grok …] | slice [--task <slug|path>]"
 metadata:
-  version: "0.5.0"
+  version: "0.6.0"
 ---
 
 # tk-verify
@@ -21,15 +21,19 @@ Measure, then report; never fix code. A checked box, a "done" in chat, and a gre
 
 **Scoped runs** never touch `plan.md` and never change the `stale:` flag; findings that belong in `## Discovered` are reported to `tk-implement`, which records them. A scoped run is red when a behaviour check or an audit finding is `fail` (§6), green otherwise. Pass or fail, it reports and returns to `tk-implement` in the same turn without ending it; fixing and deciding where to stop are `tk-implement`'s job. A repeat run on a heading that already carries an `audit:` line (the fix loop) replaces that line and its finding lines, and re-audits only the findings that failed plus the files changed since; the full slice audit runs once per slice. §8 applies to full runs only.
 
+## Task context
+
+Before reading or writing workflow artifacts, follow [tk-workflow Task selection](../tk-workflow/SKILL.md#task-selection). Accept `--task <slug|path>`; `<tasks>` is the resolved selected task directory, not the tasks root. Pass that path to every nested skill and peer, and include it in the next command. Standalone helper exceptions are defined there.
+
 ## Config
 
-Read `docs/agents/tk-workflow.md` first: the packages, the tasks path (`<tasks>` below, default `docs/tasks/`), and `## Peers` for peer names and command overrides. If missing, show defaults and ask once per session, pointing at `/tk-setup`.
+Read `docs/agents/tk-workflow.md` first: the packages, the tasks root (`tasks_root:`, default `docs/tasks/`), and `## Peers` for peer names and command overrides. If missing, show defaults and ask once per session, pointing at `/tk-setup`.
 
 ## 1. Preconditions
 
 Full scope: every box in `todo.md` is checked; otherwise list the unchecked tasks and point at `tk-implement`. `slice`: every box of that slice is checked, and its `checkpoint:` line from `tk-check slice` has no `✗`; otherwise point at `tk-check slice`. A checked box means the work is ready to audit; §5 decides whether it is done.
 
-**The change** under audit is collected per repository in scope: every distinct git repository among the config's package paths and the docs home (`git -C <path> rev-parse --show-toplevel`). In each one it is `git diff <base>` plus its untracked files (`git ls-files --others --exclude-standard`). `<base>` is that repository's entry on the `base:` line `tk-implement` writes in `todo.md` when work starts: `base: <sha>` for a single repository, `base: <repo path>@<sha> · <repo path>@<sha>` for several, paths relative to the docs home. A repository without an entry falls back to the merge-base of its `HEAD` and its default branch (`git symbolic-ref --short refs/remotes/origin/HEAD`); ask once if that does not resolve. `tk-implement`, `tk-signoff` and `tk-multi-review` use this same definition. A scoped run narrows the change to the files its tasks list and the untracked files beside them.
+**The change** under audit is collected per repository in scope: every distinct git repository among the config's package paths and the docs home (`git -C <path> rev-parse --show-toplevel`). In each one it is `git diff <base>` plus its untracked files (`git ls-files --others --exclude-standard`). `<base>` is that repository's entry on the `base:` line `tk-implement` writes in `todo.md` when work starts: `base: <sha>` for a single repository, `base: <repo path>@<sha> · <repo path>@<sha>` for several, paths relative to the docs home. A repository without an entry falls back to the merge-base of its `HEAD` and its default branch (`git symbolic-ref --short refs/remotes/origin/HEAD`); ask once if that does not resolve. `tk-implement`, `tk-signoff` and `tk-multi-review` use this same definition. Exclude sibling task directories from this task's document diff. Do not silently include or discard unrelated code changes in a shared checkout: identify them and settle scope before claiming this task is verified. A scoped run narrows the change to the files its tasks list and the untracked files beside them.
 
 ## 2. Commands
 

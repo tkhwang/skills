@@ -4,7 +4,7 @@ description: "Configure a repo for the tk-* workflow skills: layout, docs paths,
 argument-hint: "[optional notes about the repo]"
 disable-model-invocation: true
 metadata:
-  version: "0.3.1"
+  version: "0.4.0"
 ---
 
 # tk-setup
@@ -28,13 +28,15 @@ Done when you can fill every section of the config template below with either a 
 
 Show the filled draft. Then ask only the items exploration could not settle, one at a time, recommended answer first so "yes" accepts it:
 
-- **Layout** when the folder holds several packages or repos: which are in scope, and where is the **docs home** (recommended: the working folder's own `docs/`; if that folder is not a git repo, recommend `git init` there so `docs/tasks/plan.md` history survives as the archive).
+- **Layout** when the folder holds several packages or repos: which are in scope, and where is the **docs home** (recommended: the working folder's own `docs/`; if that folder is not a git repo, recommend `git init` there so the final intents and specs are versioned).
 - **Docs paths** when the repo already nests docs by module (`docs/<module>/intents/`): keep that pattern (`{module}` placeholder) or use flat `docs/intents/`.
 - **Module codes** when none exist yet: ask for the initial list (uppercase code, short name, code locations). An empty table is acceptable; `tk-intent` adds codes on first use.
 - **Language** for conversation and documents: default `ko` / follow existing docs.
 - **Peers** when more than one agent kind is installed: which kinds review, which debate (recommended: every installed kind other than the one running this session reviews; all installed kinds debate). One kind or none → write the table from what is installed without asking.
 
 Skip any question whose answer exploration already gave.
+
+Use a concrete `tasks_root` such as `docs/tasks/` or `docs/cpq-react-agent/tasks/`. Do not configure a shared active task or `current` pointer. On re-runs, replace the old `tasks:` key with `tasks_root:` using the same root path; leave existing task files in place (the workflow supports legacy flat work).
 
 ## 3. Write
 
@@ -67,7 +69,7 @@ Done when both files exist and the config has no unresolved question marks. Tell
 ## Docs
 - intents: docs/intents/          # signed-off intents, moved here at signoff; may contain {module} (lowercase module code)
 - specs:   docs/specs/{module}/   # one file per topic inside a module
-- tasks:   docs/tasks/            # intent.md, plan.md, todo.md: the work in progress, emptied at signoff; always one location
+- tasks_root: docs/tasks/         # each task uses <tasks_root>/<slug>/; only its intent survives signoff
 
 ## Modules
 | code  | name | code locations |

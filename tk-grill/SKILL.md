@@ -1,9 +1,9 @@
 ---
 name: tk-grill
 description: "Interview the user, one important question at a time, to finalize a document (intent, plan, or any design doc), patching answers into it. Use when a tk-* stage needs open decisions resolved or the user asks to grill a document."
-argument-hint: "<path to document>"
+argument-hint: "<path to document> [--task <slug|path>]"
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
 # tk-grill
@@ -12,9 +12,13 @@ Given a document, find what the human must still decide before it can be treated
 
 If `grilling` (mattpocock) is installed, follow its design-tree discipline for ordering; this skill still owns the importance filter, question format, and document patching.
 
+## Task context
+
+Before reading or writing workflow artifacts, follow [tk-workflow Task selection](../tk-workflow/SKILL.md#task-selection). Accept `--task <slug|path>`; `<tasks>` is the resolved selected task directory, not the tasks root. Pass that path to every nested skill and peer, and include it in the next command. Standalone helper exceptions are defined there.
+
 ## Config
 
-Read `docs/agents/tk-workflow.md` first for the intents and tasks paths; without it, use the defaults `docs/intents/` and `docs/tasks/`. Profiles below are chosen against these resolved paths, not literal defaults.
+Read `docs/agents/tk-workflow.md` first for the intents and tasks paths; without it, use the defaults `docs/intents/` and `docs/tasks/`. Profiles below match task documents inside any slug directory under that root (and legacy flat documents), not only files directly under the root. A supplied task document path selects its own task; standalone documents need no task.
 
 ## 1. Read
 

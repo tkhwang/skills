@@ -1,4 +1,4 @@
 interface:
   display_name: "tk Plan"
   short_description: "Plan an intent toward the better design, with a checkable Quality bar and R-id coverage"
-  default_prompt: "Use $tk-plan on docs/tasks/intent.md: read the specs and code, research current best practice and propose the better structure rather than the minimal patch (with references), write a checkable Quality bar, draft vertical slices (Backend then Frontend), resolve the important decisions with me one at a time, and write docs/tasks/plan.md and todo.md."
+  default_prompt: "Use $tk-plan on docs/tasks/<slug>/intent.md: read the specs and code, research current best practice and propose the better structure rather than the minimal patch (with references), write a checkable Quality bar, draft vertical slices (Backend then Frontend), resolve the important decisions with me one at a time, and write docs/tasks/<slug>/plan.md and todo.md."

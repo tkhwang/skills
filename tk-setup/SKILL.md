@@ -4,7 +4,7 @@ description: "Configure a repo for the tk-* workflow skills: layout, docs paths,
 argument-hint: "[optional notes about the repo]"
 disable-model-invocation: true
 metadata:
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # tk-setup
@@ -17,7 +17,7 @@ Read before asking. Collect:
 
 - **Repo shape**: `git remote -v`, `git rev-parse --show-toplevel`. Is the working folder itself a repo, or a folder holding several repos (`backend/`, `frontend/` each with `.git`)?
 - **Packages**: every `package.json` (or `pyproject.toml`, `go.mod`, `Cargo.toml`) within two levels; lockfile → package manager; `pnpm-workspace.yaml` / `workspaces` field.
-- **Commands**: each package's scripts for typecheck, lint, format, test and build; their write modes (`lint:fix`, `format` / `format:write`, or the tools' own `--fix` / `--write`) and the test runner's related-tests mode (`vitest related --run`, `jest --findRelatedTests`), which `tk-check` uses; checked-in wrappers; CI workflows under `.github/workflows/` and what they actually run. CI is the source of truth for what gates merges.
+- **Commands**: each package's scripts for typecheck, lint, format, test and build; their write modes (`lint:fix`, `format` / `format:write`, or the tools' own `--fix` / `--write`) and the test runner's related-tests mode (`vitest related --run`, `jest --findRelatedTests`), which `tk-check` uses; each formatter's gate: `enforce` when the repo runs it (a format or format-check script, a CI step, a pre-commit hook such as husky, lint-staged or lefthook, or a lint rule like `prettier/prettier`), with the file scope that runner applies (the hook's glob, the script's paths), `advisory` when the repo only carries its config or dependency (`eslint-config-prettier` alone runs nothing), whose command is then the installed formatter's own check mode, or `none` when the formatter is not installed; checked-in wrappers; CI workflows under `.github/workflows/` and what they actually run. CI is the source of truth for what gates merges.
 - **Existing docs**: `docs/` tree; any `intents/`, `specs/`, `tasks/`, `plans/` folders, possibly nested as `docs/<module>/…`; existing intent filenames and their module codes (`AGENT001-…` → `AGENT`).
 - **Existing agent config**: `CLAUDE.md`, `AGENTS.md`, an `## Agent skills` block, `docs/agents/*.md` from other skill sets.
 - **Peer agents**: which of `claude`, `codex`, `grok` are on `PATH` (`command -v`), and whether this session runs inside herdr (`HERDR_ENV=1`). These feed `## Peers` for `tk-multi-review` / `tk-multi-debate`, and the names and command overrides `tk-verify <peer…>` uses.
@@ -32,6 +32,7 @@ Show the filled draft. Then ask only the items exploration could not settle, one
 - **Docs paths** when the repo already nests docs by module (`docs/<module>/intents/`): keep that pattern (`{module}` placeholder) or use flat `docs/intents/`.
 - **Module codes** when none exist yet: ask for the initial list (uppercase code, short name, code locations). An empty table is acceptable; `tk-intent` adds codes on first use.
 - **Language** for conversation and documents: default `ko` / follow existing docs.
+- **Format gate** when a package has a formatter its repo does not run: `advisory` (recommended: follows the repo's own rule; `tk-check` reports the change's unformatted files and never writes them) or `enforce` (this workspace holds itself to the formatter; files unformatted before the change are still left alone). Exploration only suggests `advisory` here, so ask this even though it looks settled, unless the human already chose a gate.
 - **Peers** when more than one agent kind is installed: which kinds review, which debate (recommended: every installed kind other than the one running this session reviews; all installed kinds debate). One kind or none → write the table from what is installed without asking.
 
 Skip any question whose answer exploration already gave.
@@ -79,8 +80,8 @@ Done when both files exist and the config has no unresolved question marks. Tell
 ## Verify
 | package | typecheck | lint | format | test | build | fix | related tests |
 |---------|-----------|------|--------|------|-------|-----|---------------|
-| app     | pnpm tsc --noEmit | pnpm eslint . --max-warnings 0 | pnpm prettier --check . | pnpm test | pnpm build | pnpm eslint --fix · pnpm prettier --write | pnpm vitest related --run |
-- fix: write modes, run in order on the changed files · related tests: takes a file list · `—`: the repo has none
+| app     | pnpm tsc --noEmit | pnpm eslint . --max-warnings 0 | pnpm prettier --check . · enforce | pnpm test | pnpm build | pnpm eslint --fix · pnpm prettier --write | pnpm vitest related --run |
+- format: command · `enforce` (the repo runs it; add the runner's file scope when it is narrower, `· *.{ts,tsx}`) or `advisory` (config only: reported, never blocking, never written) · fix: write modes, run in order on the changed files (the formatter's only when `enforce`) · related tests: takes a file list · `—`: the repo has none
 
 ## Language
 - conversation: ko
@@ -95,7 +96,8 @@ Done when both files exist and the config has no unresolved question marks. Tell
 
 ## Verification
 
-- [ ] Every `Verify` command was found in scripts or CI, or is the write or related-tests mode of a tool found there; none guessed.
+- [ ] Every `Verify` command was found in scripts or CI, or is the write or related-tests mode of a tool found there, or, for an `advisory` gate, the check mode of an installed formatter; none guessed.
+- [ ] Every format command carries its gate, `enforce` only where the repo runs the formatter or the human chose it, with the runner's file scope when it is narrower.
 - [ ] `Modules` codes match existing intent filenames, if any.
 - [ ] The pointer block is in exactly one of `CLAUDE.md` / `AGENTS.md`.
 - [ ] Every `Peers` kind is installed on this machine, or the row is marked `not installed`.

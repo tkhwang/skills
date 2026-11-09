@@ -4,7 +4,7 @@ description: "Hub and driver for the tk staged workflow: shows where work stands
 argument-hint: "[status | start [<title> [ko|en]] | next | all | slice] [--task <slug|path>]"
 disable-model-invocation: true
 metadata:
-  version: "0.8.0"
+  version: "0.9.0"
 ---
 
 # tk-workflow
@@ -20,7 +20,7 @@ Five stages, state derived from files. One agent drives; peers join for review a
 
 `docs/tasks/<slug>/` holds one work item: `intent.md`, `plan.md`, `todo.md`, `baseline.md`, `reviews/` and `debates/`. Several task folders can coexist. On Go, signoff moves the intent with its Outcome to `docs/intents/<MODULE><NNN>-<slug>.md` and deletes that task's temporary artifacts. Only the intent remains as the task record; specs describe current behaviour. No completion report or plan/todo archive is created. The human commits after signoff.
 
-`tk-grill` is the shared interview used by `tk-intent` and `tk-plan`. `tk-check` is the shared mechanical gate: it runs the repo's typecheck, lint, format, tests and build and fixes what they report; `tk-implement` calls it at every boundary, `tk-verify` in report mode, and it works on its own. `tk-intent archive` takes a dropped intent out of the flow into `archived/`. `tk-setup` writes the per-repo config. `tk-multi-review` and `tk-multi-debate` bring peer agents (claude, codex, grok) in at any gate; they read, the orchestrating agent writes.
+`tk-grill` is the shared interview used by `tk-intent` and `tk-plan`. `tk-check` is the shared mechanical gate: it runs the repo's typecheck, lint, format, tests and build and fixes what they report. `tk-implement` calls it at every boundary on the change's files only (related tests, no build), `tk-verify` once at the end over every package (`all`: full suites and build), and it works on its own. `tk-intent archive` takes a dropped intent out of the flow into `archived/`. `tk-setup` writes the per-repo config. `tk-multi-review` and `tk-multi-debate` bring peer agents (claude, codex, grok) in at any gate; they read, the orchestrating agent writes.
 
 ## Config
 
@@ -80,7 +80,7 @@ Once this skill has run in a session, plain keywords continue the flow without r
 | `수정: …` / `revise: …` | Patch the current stage's artifact as asked; wait for approval again |
 | `all` / `slice` | Run `tk-implement` to the end (`all`, the default) or stopping after each slice (`slice`). Either mode stops after a sub-phase that changed the database, and checkpoints every sub-phase and slice. The mode is written to `todo.md`, so `다음` resumes in it |
 | `검증 [peer…]` / `verify [peer…]` | Once every box in `todo.md` is checked: run `tk-verify` as the full stage, with each named peer auditing independently; without names the current agent audits alone |
-| `점검` / `check` | Run `tk-check` on the current change: the repo's typecheck, lint, format, tests and build, fixing what fails; the stage does not change |
+| `점검` / `check` | Run `tk-check` on the current change: lint and format on the changed files, the typecheck of every package they touch, and the tests related to them, fixing what fails; the stage does not change |
 | `리뷰 [stage] [peer…]` / `review …` | Run `tk-multi-review` on the artifact awaiting approval; the artifact stays unapproved |
 | `토론 <Q<n> or sentence>` / `debate …` | Run `tk-multi-debate` on an open decision; the answer still comes from the human via `tk-grill` |
 | `상태` / `status` | Re-derive state from files and report |
@@ -96,7 +96,7 @@ Approval is explicit. "알아서 해" and "whatever you think" are delegation: o
 - **One folder per work item.** Parallel tasks use distinct stable slugs; all stages follow Task selection above. Worktrees remain useful for isolating code changes.
 - **Commit after signoff.** On Go, `tk-signoff` records the concise Outcome, moves the intent under its ID, and deletes only the selected task's temporary artifacts, without placeholders or a replacement completion document. Other tasks stay untouched. The human commits the code, intent, spec updates and cleanup; no stage asks for a commit first.
 - **git is read-only for the agent**: `status`, `diff`, `log`. Commits, pushes, stashes, checkouts are the human's.
-- **Commands come from the repo** (config, `package.json`, CI), discovered and run by `tk-check`. Warnings fail; a tool is never silenced to pass, and what failed before the work is reported, not fixed. Run a command again only after code changed.
+- **Commands come from the repo** (config, `package.json`, CI), discovered and run by `tk-check`. Warnings fail; a tool is never silenced to pass, and what failed before the work is reported, not fixed. The format check follows each repo's own rule: `enforce` when the repo runs its formatter (script, CI, hook, lint rule), `advisory` (reported, never blocking, never written) when it only carries the config; the config's Verify table can set either. Run a command again only after code changed.
 - **Language**: talk to the user in the config's conversation language; write documents in the config's document language; keep code, identifiers and commands untranslated.
 - **Peers are read-only.** `tk-multi-*` and `tk-verify <peer…>` run other agents headless in their own processes; their output is a file under `docs/tasks/<slug>/reviews/` or `docs/tasks/<slug>/debates/`. Only the orchestrating agent edits documents or code.
 - **Repo conventions win.** If the repo already lays docs out differently, follow it via `tk-setup` config.

@@ -16,7 +16,7 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 
 - **파일이 곧 상태.** 각 단계는 문서를 읽고 문서를 씁니다. 어디까지 왔는지는 대화 기억이 아니라 `docs/` 에서 유도하므로, 어떤 세션에서든 이어서 할 수 있습니다.
 - **단계마다 사람의 승인.** 단계는 산출물을 저장하고 요약을 출력한 뒤 턴을 끝냅니다. 다음 단계는 명시적인 "다음"에만 시작합니다.
-- **품질은 먼저 요구하고, 나중에 감사(audit)합니다.** plan 은 가장 작은 patch 가 아니라 더 나은 설계를 목표로 합니다. 지금 구조를 업계 best practice 와 비교해 근거를 남기고, 검사 가능한 Quality bar 를 적습니다. 구현은 그 기준대로 만들고 하는 동안 정리하며, 경계마다 `tk-check` 가 repo 의 typecheck, lint, format, 테스트를 돌리고 실패를 도구를 끄지 않고 고칩니다. 검증은 체크박스나 초록 테스트를 그대로 믿지 않고 코드를 열고 테스트를 읽습니다. 혼자 하거나, 다른 agent 들이 각자 독립적으로 감사합니다.
+- **품질은 먼저 요구하고, 나중에 감사(audit)합니다.** plan 은 가장 작은 patch 가 아니라 더 나은 설계를 목표로 합니다. 지금 구조를 업계 best practice 와 비교해 근거를 남기고, 검사 가능한 Quality bar 를 적습니다. 구현은 그 기준대로 만들고 하는 동안 정리하며, 경계마다 `tk-check` 가 바뀐 파일에 repo 의 typecheck, lint, format, 관련 테스트를 돌리고 실패를 도구를 끄지 않고 고칩니다. 전체 테스트와 build 는 검증에서 한 번 돌립니다. 검증은 체크박스나 초록 테스트를 그대로 믿지 않고 코드를 열고 테스트를 읽습니다. 혼자 하거나, 다른 agent 들이 각자 독립적으로 감사합니다.
 - **multi-agent 리뷰와 토론.** 기본은 agent 하나로 돕니다. `리뷰` / `토론` 이라고 하면 다른 agent(claude, codex, grok)가 산출물을 읽거나 결정을 놓고 토론합니다. 읽기 전용이고 답은 파일로 남으며, 문서와 코드를 고치는 agent 는 여전히 하나입니다.
 - **agent 는 commit 하지 않음.** git 은 읽기만 합니다. commit, push, branch 는 사람이 하고, commit 시점은 signoff 직후입니다. 유일한 예외는 흐름 밖의 `tk-fix-pr` 로, 직접 넘긴 PR 에 대해서만, 승인한 뒤에 합니다.
 
@@ -31,7 +31,7 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 | [`tk-intent`](tk-intent/) | [0] | `/tk-intent "제목"` 이 안내 주석이 있는 템플릿으로 `docs/tasks/<slug>/intent.md` 를 만들고, 사람이 초안을 쓰면 `/tk-intent` 가 코드와 대조해 읽고 중요한 공백만 묻고, 요구사항에 `R1`, `R2`, … 번호를 붙이고 모듈을 정합니다. ID 는 intent 가 `docs/tasks/` 를 떠날 때 붙습니다: signoff 때 `docs/intents/AGENT001-slug.md` 로, 또는 폐기하면 `/tk-intent archive` 가 이유를 남기고 `archived/` 로 옮깁니다. |
 | [`tk-plan`](tk-plan/) | [1] | intent 를 `docs/tasks/<slug>/plan.md` + `todo.md` 로 바꿉니다. 업계 best practice 를 조사해 최소 patch 가 아닌 더 나은 설계를 계획하고(Design direction, 근거 포함), 검사 가능한 Quality bar 를 적습니다. 세로 슬라이스, 슬라이스 안은 Backend → Frontend, R-id 커버리지 매트릭스, 미결 결정 0. |
 | [`tk-implement`](tk-implement/) | [2] | `todo.md` 를 순서대로, 각 task 를 Quality bar 까지 빠짐없이 구현하고 증거와 함께 체크합니다. 첫 task 전에 `tk-check baseline` 이 이미 실패하던 것을 기록합니다. Backend / Frontend 소단계가 끝날 때마다 정리(cleanup)와 `tk-check phase` 체크포인트를, slice 가 끝날 때마다 `tk-check slice` 와 `tk-verify slice` 감사를 돌리고, 나온 문제는 스스로 고칩니다. 기본 `all` 은 끝까지, `slice` 는 slice 마다 멈춥니다. 어느 모드든 DB 를 바꾼 소단계(plan 의 `db: yes`) 뒤에는 멈춥니다. |
-| [`tk-verify`](tk-verify/) | [3] | repo 의 typecheck, lint(warning 도 실패), format 검사, 테스트, build 를 `tk-check` report 모드로, plan 의 동작 검증과 함께 실행한 뒤 작업 자체를 감사합니다: 모든 task 와 R-id 를 코드에서 직접 확인하고, 테스트가 실제로 무엇을 assert 하는지(하드코딩된 값, mock 된 대상, skip 된 테스트), Quality bar, 남은 지저분함을 봅니다. `/tk-verify codex grok` 이면 peer 들이 독립적으로 감사하고, 그 지적은 repo 에서 확인된 것만 인정합니다. 결과는 R-id 별로 `plan.md` 에 기록하고, 코드는 고치지 않습니다. `slice` 를 주면 `tk-implement` 가 `tk-check slice` 다음에 돌리는 구현 중간 감사가 됩니다: 그 slice 의 동작 검증과 감사를 하고 `todo.md` 에 `audit:` 줄을 남깁니다. |
+| [`tk-verify`](tk-verify/) | [3] | 마지막에 한 번 하는 깊은 검증입니다. 모든 패키지의 typecheck, lint(warning 도 실패), format 검사, 전체 테스트, build 를 `tk-check all` 로 돌려 도구가 보고한 실패를 변경 파일 안에서 고치고(`report` 는 측정만), plan 의 동작 검증을 한 뒤 작업 자체를 감사합니다: 모든 task 와 R-id 를 코드에서 직접 확인하고, 테스트가 실제로 무엇을 assert 하는지(하드코딩된 값, mock 된 대상, skip 된 테스트), Quality bar, 남은 지저분함을 봅니다. `/tk-verify codex grok` 이면 peer 들이 독립적으로 감사하고, 그 지적은 repo 에서 확인된 것만 인정합니다. 결과는 R-id 별로 `plan.md` 에 기록하고, 감사에서 나온 문제는 판정만 하고 여기서 고치지 않습니다. `slice` 를 주면 `tk-implement` 가 `tk-check slice` 다음에 돌리는 구현 중간 감사가 됩니다: 그 slice 의 동작 검증과 감사를 하고 `todo.md` 에 `audit:` 줄을 남깁니다. |
 | [`tk-signoff`](tk-signoff/) | [4] | 모든 R-id 를 plan, diff, 검증 결과로 추적합니다. Go / No-Go. Go 면 intent 에 Outcome 추가, 모듈 spec 갱신, intent 를 `docs/intents/<ID>-<slug>.md` 로 옮기고 선택한 task 의 임시 산출물만 삭제. commit 은 signoff 다음에 사람이 합니다. |
 
 ### Single agent · 기타
@@ -39,7 +39,7 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 | Skill | 하는 일 |
 |-------|---------|
 | [`tk-grill`](tk-grill/) | 문서의 미결 결정을 추천안과 함께 한 번에 하나씩 묻고, 답을 문서에 반영합니다. `tk-intent` 와 `tk-plan` 이 사용하고, 어떤 설계 문서에든 단독으로 쓸 수 있습니다. |
-| [`tk-check`](tk-check/) | 변경에 대해 repo 자체의 typecheck, lint(warning 도 실패), format 검사, 테스트, build 를 돌립니다. 바뀐 파일에 formatter 와 linter 의 write 모드를 먼저 적용하고, 남은 실패는 코드에서 최대 세 번까지 고칩니다. `eslint-disable`, `@ts-ignore`, `any`, 테스트 skip, 설정 변경으로 통과시키지는 않습니다. 작업 전부터 실패하던 것은 고치지 않고 보고만 합니다. `tk-implement` 가 경계마다, `tk-verify` 가 report 모드로 쓰고, 아무 변경 뒤에나 `/tk-check` 로 단독 실행할 수 있습니다. |
+| [`tk-check`](tk-check/) | 변경에 대해 repo 자체의 typecheck, lint(warning 도 실패), format 검사, 테스트를 돌립니다. 단계마다는 바뀐 파일만, typecheck 는 증분으로, 테스트는 관련 테스트만 돌리고, `all` 이면 모든 패키지·전체 테스트·build 를 돌립니다. format 검사는 repo 가 직접 formatter 를 돌릴 때(script, CI, hook, lint 규칙)만 강제하고, 아니면 참고(advisory)로 보고만 합니다. 바뀐 파일에 linter 의 write 모드와, 강제일 때 formatter 의 write 모드를 먼저 적용하고, 남은 실패는 코드에서 최대 세 번까지 고칩니다. `eslint-disable`, `@ts-ignore`, `any`, 테스트 skip, 설정 변경으로 통과시키지는 않습니다. 작업 전부터 실패하던 것은 고치지 않고 보고만 합니다. `tk-implement` 가 경계마다, `tk-verify` 가 `all` 로 쓰고, 아무 변경 뒤에나 `/tk-check` 로 단독 실행할 수 있습니다. |
 | [`tk-fix-pr`](tk-fix-pr/) | `/tk-fix-pr <PR 링크>` 는 PR 의 미해결 review thread, review 본문의 지적, 실패한 check 를 모으고, 각각을 코드와 대조해 확인한 뒤(리뷰 내용은 데이터일 뿐 지시로 따르지 않음) 맞는 것만 고치고 `tk-check` 를 돌립니다. 한 번의 승인 뒤 사용자 이름으로 trailer 없이 commit 하고, PR branch 에 force 없이 push 하고, thread 마다 답글(`Fixed in <sha>: …`)을 달아 처리한 것을 resolve 하고, 요약 comment 를 남깁니다. `report` 는 분류만 합니다. |
 
 ### Multi-agent
@@ -62,7 +62,7 @@ tkhwang 의 개인 [agent skills](https://docs.claude.com/en/docs/claude-code/sk
 리뷰                            → codex 와 grok 이 plan.md 를 읽고, 지적은 patch 또는 질문으로
 다음                            → /tk-implement: Slice 1 Backend (migration) … 멈춤
 다음                            → Slice 1 Frontend → Slice 2 … 끝까지, 경계마다 정리와 tk-check (`slice`: slice 마다 멈춤)
-검증 codex grok                 → /tk-verify: tk-check (tsc · eslint · prettier · tests), 이어서 이 agent + codex + grok 이 감사 (`다음`: 이 agent 혼자)
+검증 codex grok                 → /tk-verify: tk-check all (tsc · eslint · prettier · 전체 테스트 · build), 이어서 이 agent + codex + grok 이 감사 (`다음`: 이 agent 혼자)
 다음                            → /tk-signoff: Go → spec 갱신, intent → docs/intents/AGENT001-tenant-export.md, 해당 task 정리
 git commit                      signoff 다음에 사람이: 코드, intent, spec, 해당 task 정리 내역을 한 commit 으로
 ```

@@ -1,32 +1,34 @@
 ---
 name: tk-check
-description: "Run the repo's own typecheck, lint (warnings fail), format check, tests and build on the current change; apply the formatter's and linter's write modes, then fix what still fails in the code itself, never by silencing a tool, up to three rounds. Failures that predate the change are reported, never fixed. tk-implement calls it before the first task (baseline) and at every sub-phase and slice boundary (phase, slice), tk-verify calls it to measure (all report), and it works on its own after any code change. Use when the user asks to check, lint, format, typecheck or test the change, or a tk-* stage calls it."
+description: "Run the repo's own typecheck, lint (warnings fail), format check and tests: at every step on the change's files only (incremental typecheck, related tests), and on all, tk-verify's final run, over every package with the full suites and the build. Whether the format check gates or only advises follows each repo's own rule. Apply the linter's write mode and, where the format check gates, the formatter's, then fix what still fails in the code itself, never by silencing a tool, up to three rounds. Failures that predate the change are reported, never fixed. tk-implement calls it before the first task (baseline) and at every sub-phase and slice boundary (phase, slice), tk-verify calls it once over everything (all), and it works on its own after any code change. Use when the user asks to check, lint, format, typecheck or test the change, or a tk-* stage calls it."
 argument-hint: "[phase | slice | all | baseline] [report | autofix] [--task <slug|path>]"
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # tk-check
 
-The mechanical gate: the repo's own tools, run over what changed, warnings counted as failures. What a tool can fix in its write mode, the tool fixes; what is left, the agent fixes in the code. A tool's output is a fact, not a judgement, so one skill both measures and fixes it. Whether the work meets the plan is a judgement: that is `tk-verify`'s audit, which never fixes.
+The mechanical gate: the repo's own tools, warnings counted as failures. What a tool can fix in its write mode, the tool fixes; what is left, the agent fixes in the code. A tool's output is a fact, not a judgement, so one skill both measures and fixes it. Whether the work meets the plan is a judgement: that is `tk-verify`'s audit, which never fixes.
+
+**Two depths.** Every step of the work checks only the change, so it stays fast: lint and format on the changed files, the tests related to them, and an incremental typecheck of the packages they live in. `all`, which `tk-verify` runs once at the end, checks everything the way CI does: every package, every test suite, the build. So a break in a file the change did not touch, or in a test unrelated to its files, surfaces on `all`, not at a step.
 
 ## Scope
 
-| Argument | Lint and format | Tests | Records | Called by |
-|---|---|---|---|---|
-| (none) | the files of the change | the suite of every package the change touches | the report, in chat | the human, after any code change; `tk-implement` after its final cleanup |
-| `phase` | the change, narrowed to the last `###` sub-phase | its tasks' `verify:` commands and the tests related to its files | `checkpoint:` line under that `###` heading in `todo.md` | `tk-implement` at every sub-phase boundary |
-| `slice` | the change, narrowed to the `##` slice | the suite of every package the slice touches | `checkpoint:` line under that `##` heading | `tk-implement` at every slice boundary, before `tk-verify slice` |
-| `all` | every package, as CI runs them | every package's full suite, once | the report, returned to `tk-verify` | `tk-verify` on a full run |
-| `baseline` | every package, before any code changes | every package's full suite | `baseline:` line in `todo.md`, entries in `<tasks>/baseline.md` | `tk-implement` before the first task |
+| Argument | Lint and format | Typecheck | Tests | Build | Records | Called by |
+|---|---|---|---|---|---|---|
+| (none) | the files of the change | each package the change touches, incremental | the tests related to the change's files | — | the report, in chat | the human, after any code change; `tk-implement` after its final cleanup; `tk-fix-pr` |
+| `phase` | the change, narrowed to the last `###` sub-phase | each package it touches, incremental | its tasks' `verify:` commands and the tests related to its files | — | `checkpoint:` line under that `###` heading in `todo.md` | `tk-implement` at every sub-phase boundary |
+| `slice` | the change, narrowed to the `##` slice | each package it touches, incremental | its tasks' `verify:` commands and the tests related to its files | — | `checkpoint:` line under that `##` heading | `tk-implement` at every slice boundary, before `tk-verify slice` |
+| `all` | every package, as CI runs them | every package, full | every package's full suite, once | where the repo has one | the report, returned to `tk-verify` | `tk-verify` on its full run |
+| `baseline` | lint on every package; no format (§4) | every package, full | every package's full suite | where the repo has one | `baseline:` line in `todo.md`, entries in `<tasks>/baseline.md` | `tk-implement` before the first task |
 
-Typecheck and build always run per package. Build runs on every scope except `phase`.
+An `advisory` format check (§2) covers the change's files on every scope, `all` included.
 
 | Level | Write modes (§3) | Code fixes (§5) | Used by |
 |---|---|---|---|
-| `fix` (default) | yes | yes | `tk-implement`, the human |
-| `autofix` | yes | no | `tk-verify fix` |
-| `report` | no | no | `tk-verify`; always on `baseline`, which never changes a file |
+| `fix` (default) | yes | yes | `tk-implement`, `tk-verify`, the human |
+| `autofix` | yes | no | the human |
+| `report` | no | no | `tk-verify report`; always on `baseline`, which never changes a file |
 
 **Turn.** Called by a stage (`tk-implement`, `tk-verify`), it reports and returns to that stage in the same turn, pass or fail; deciding where to stop is the caller's job. Run by the human, it ends the turn with the report.
 
@@ -36,13 +38,13 @@ Before reading or writing workflow artifacts, follow [tk-workflow Task selection
 
 ## Config
 
-Read `docs/agents/tk-workflow.md` first: the packages and their paths, the Verify table, the tasks root (`tasks_root:`, default `docs/tasks/`). If it is missing, discover the commands (§2), show them in the report, and point at `/tk-setup` once per session; do not stop.
+Read `docs/agents/tk-workflow.md` first: the packages and their paths, the Verify table with each package's format gate, the tasks root (`tasks_root:`, default `docs/tasks/`). If it is missing, discover the commands and the gates (§2), show them in the report, and point at `/tk-setup` once per session; do not stop.
 
 ## 1. The change
 
 The change is the one `tk-verify` §1 defines: per repository in scope, `git diff <base>` plus untracked files, with `<base>` from the `base:` line in `todo.md`, else the merge-base of `HEAD` and the default branch. Outside the tk workflow (no `todo.md`) the same fallback applies; on the default branch itself that is the uncommitted work.
 
-- **Files in scope**: the change's added and modified files that still exist, never deleted paths. `phase` / `slice` narrow them to the files the tasks of that sub-phase or slice list, plus any other file the work on those tasks edited.
+- **Files in scope**: the change's added and modified files that still exist, never deleted paths. `phase` / `slice` narrow them to the files the tasks of that sub-phase or slice list, plus any other file the work on those tasks edited. On `all` too, these are the files that write modes and fixes may touch; only the checks widen to every package.
 - **Packages in scope**: every package whose path holds a file in scope; on `all` and `baseline`, every package.
 
 Nothing in scope: report "nothing to check" and return.
@@ -53,13 +55,19 @@ In order: the config's Verify table → `plan.md` Verification plan → `package
 
 - **File lists.** A scoped lint, format or write run calls the tool with the repo's config on the files (`pnpm exec eslint --max-warnings 0 <files>`, `pnpm exec prettier --check --ignore-unknown <files>`), not a script that hardcodes `.`. Pass only files the tool handles; eslint 9 also takes `--no-warn-ignored`, since an ignored file passed by name is itself a warning.
 - **Write modes** are the checking tools' own: `eslint --fix`, `prettier --write`, `biome check --write`, `ruff check --fix` and `ruff format`, `gofmt -w`. Never a tool the check does not use.
-- **Related tests**: the runner's own mode (`vitest related --run <files>`, `jest --findRelatedTests <files>`). Without one, `phase` runs only its tasks' `verify:` commands.
+- **Related tests**: the repo's test command in its runner's own related mode, keeping the command's config (`vitest related --run --config <its config> <files>`, `jest --findRelatedTests <files>`). Without one, the test files in scope, plus on `phase` and `slice` the tasks' `verify:` commands. When nothing relates to the files, the test result is `none`, noted "no related tests; the full suite runs on `all`".
+- **Incremental typecheck**, on every scope but `all` and `baseline`: when the typecheck is a direct `tsc` or `vue-tsc` call, or a package script that is one, add `--incremental --tsBuildInfoFile node_modules/.cache/tk-check/<tsconfig name>.tsbuildinfo`, so a repeat run re-checks only what changed; `tsc -b` is incremental already. Any other command runs as it is. The cache lives under `node_modules/.cache/`, which git ignores, so it never joins the change. A type error can surface in a file the change did not touch, so the typecheck always covers the whole package, never a file list.
+- **Format gate**, per package that has a formatter:
+  - `enforce`: the repo itself runs the formatter, through a format or format-check script, a CI step, a pre-commit hook (husky, lint-staged, lefthook, pre-commit) or a lint rule that runs it (`prettier/prettier`). The format check gates like every other check.
+  - `advisory`: the repo carries the formatter's config or dependency, but nothing in it runs the formatter. The check is for reference only: on every scope it covers the change's files, never writes a file and never turns a result red.
+  - `eslint-config-prettier` only turns lint rules off and runs nothing, so it does not make a gate `enforce`.
+  - The config's Verify table states the gate in the format cell (`<command> · enforce`, `<command> · advisory`, or `—`); the config wins, so a team can hold itself to a formatter its repo does not run. Without a config entry, decide by the rules above and give the reason in the report (`advisory: .prettierrc only, no script, CI step or hook runs prettier`). No formatter config or dependency: `none`.
 
-Done when every package in scope has a command for typecheck, lint, format and test, or an explicit "none" with the reason.
+Done when every package in scope has a command for typecheck, lint, format and test, or an explicit "none" with the reason, and every format command has its gate.
 
 ## 3. Write modes (`fix`, `autofix`)
 
-Before any check, on the files in scope only (on `all` too: the change's files, never the whole tree): the linter's fix mode, then the formatter's write mode, so the formatter has the last word on layout. Skip a file the baseline lists as unformatted: reformatting it would bury the change in layout noise, and its format result is `baseline`. Note every file a write mode changed (`git diff --name-only` before and after).
+Before any check, on the files in scope only (on `all` too: the change's files, never the whole tree): the linter's fix mode, then, where the format gate is `enforce`, the formatter's write mode, so the formatter has the last word on layout. An `advisory` formatter never writes. Skip a file that was already unformatted before the change (§4): reformatting it would bury the change in layout noise, and its format result is `baseline`. Note every file a write mode changed (`git diff --name-only` before and after).
 
 ## 4. Run and classify
 
@@ -67,18 +75,18 @@ Per package in scope, in this order, reading every output:
 
 1. typecheck: zero errors, zero warnings
 2. lint: zero errors, zero warnings
-3. format check
+3. format check, at its gate
 4. tests, as the Scope table says; `phase` and `slice` add their tasks' `verify:` commands that the tests above do not already run
-5. build, where the repo has one, on every scope but `phase`: compiler and type warnings fail; build-tool advisories (bundle size, browserslist age) are notes
+5. build, on `all` and `baseline`, where the repo has one: compiler and type warnings fail; build-tool advisories (bundle size, browserslist age) are notes
 
 A command that cannot run (missing tool, dependency or environment variable) is `fail` with its raw error, never `pass` and never skipped.
 
 Each failure is **new** or **baseline**:
 
+- **A format failure** is judged file by file against `<base>`, with or without a `baseline:` line: baseline when the file, as it was at `<base>`, fails the same check (`git show <base>:<file>` piped to the formatter's stdin mode with the file's name, such as `prettier --check --stdin-filepath <file>`, or a temporary file outside the repo); new when the file is new or was formatted at `<base>`. A file the change did not touch is what it was at `<base>`, so its failure is baseline. This is why `baseline` records no format entries.
 - **With a `baseline:` line** in `todo.md`: baseline when it matches an entry in `<tasks>/baseline.md` and the file holds no more of it than at baseline. Line numbers, durations and absolute paths are ignored; everything else must match:
   - a type error or lint message: file, code or rule, and message
   - a failing test: its full name and its failure, the first line of the assertion or error it reports; the same test failing for another reason is new
-  - a format failure: the file
   - a failed build: the first error's file, code and message
   - a command that cannot run: the command and its error
 - **Without one** (a run outside the tk workflow, or work started before baselines existed), compare with the code before the change, at `<base>`:
@@ -87,7 +95,7 @@ Each failure is **new** or **baseline**:
   - a command that cannot run is baseline when it also cannot run at `<base>` for the same error.
 - Everything else is new.
 
-A check is `pass` with no failure, `fail` with any new failure, `baseline` with baseline failures only, `none` without a command. Only `fail` is red. Baseline failures are reported, never fixed: fixing them is a separate change.
+A check is `pass` with no failure, `fail` with any new failure, `baseline` with baseline failures only, `none` without a command, and `advisory` for an advisory format check with files that differ: it lists them, new and pre-existing apart, and is never red. Only `fail` is red. Baseline failures are reported, never fixed: fixing them is a separate change.
 
 Done when every check in scope has a result.
 
@@ -105,13 +113,13 @@ While a check is `fail`, up to three rounds. A round goes through every failing 
   - deleting the failing code, or a caller's use of it, instead of fixing it
 
   When one of these is the right fix (a test that must pass a wrong type on purpose), stop and ask; never add it on your own.
-- **Stay in scope.** Edit only the files in scope. A fix that needs another file stops the run: called by `tk-implement`, that is its safety gate; run by the human, ask once whether to widen.
+- **Stay in scope.** Edit only the files in scope. A fix that needs another file stops the run: called by `tk-implement` or `tk-verify`, that is the caller's safety gate; run by the human, ask once whether to widen.
 
 A fix that needs a decision, or a fourth round, also stops the run. A stopped run stays red and reports the raw output and what is needed.
 
 When this run changed any file (write modes or fixes) and `plan.md` has `## Verification`, set its `stale: yes`, unless `tk-verify` called it.
 
-Done when every check is `pass`, `baseline` or `none`, or the run stopped with its reason.
+Done when every check is `pass`, `baseline`, `advisory` or `none`, or the run stopped with its reason.
 
 ## 6. Record and report
 
@@ -123,11 +131,11 @@ write modes: eslint --fix → src/export/csv.ts · prettier --write → src/expo
 
 | package | check | command | result | notes |
 |---|---|---|---|---|
-| backend | typecheck | pnpm tsc --noEmit | pass | fixed in round 1 |
+| backend | typecheck | pnpm tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tk-check/tsconfig.tsbuildinfo | pass | fixed in round 1 |
 | backend | lint | pnpm exec eslint --max-warnings 0 --no-warn-ignored <3 files> | pass | |
-| backend | format | pnpm exec prettier --check --ignore-unknown <3 files> | pass | |
-| backend | test | pnpm vitest run | baseline | test/legacy.test.ts › parses v1 format, failing at baseline |
-| backend | build | — | none | CI does not build |
+| backend | format | pnpm exec prettier --check --ignore-unknown <3 files> | pass | enforce: CI runs prettier --check |
+| backend | test | pnpm vitest related --run <3 files> | baseline | test/legacy.test.ts › parses v1 format, failing at baseline |
+| frontend | format | pnpm exec prettier --check --ignore-unknown <2 files> | advisory | advisory: .prettierrc only · new: src/list.tsx · pre-existing: src/table.tsx |
 
 fixes:
 - round 1 · src/export/csv.ts:41 · TS2345 — `row` narrowed with a type guard instead of a cast to `ExportRow`
@@ -135,15 +143,17 @@ fixes:
 
 Keep the raw output of every check still `fail` in a fenced block under the table. Then, by scope:
 
-- **`phase` / `slice`**: write, or on a repeat run replace, one line under the heading in `todo.md` (on a `###`, below its `cleanup:` line): `checkpoint: tsc ✓ · eslint ✓ · prettier ✓ · vitest ✓ (baseline 1) · fixed 2 · YYYY-MM-DD HH:MM`, with `✗` on each red check. Report the result, the fixes and the baseline failures to `tk-implement`, and return.
-- **`baseline`**: write, or replace, the line under `base:` in `todo.md`: `baseline: clean · YYYY-MM-DD HH:MM`, or `baseline: <n> failing · tsc 0 · eslint 14 · prettier 2 files · vitest 1 · see <tasks>/baseline.md · YYYY-MM-DD HH:MM`, and then write `<tasks>/baseline.md` with one line per entry: package, check, file, code or rule or test name, message (for a test, the first line of its failure; for a build, the first error; for a command that cannot run, the command and its error), count. Return to `tk-implement`.
+- **`phase` / `slice`**: write, or on a repeat run replace, one line under the heading in `todo.md` (on a `###`, below its `cleanup:` line): `checkpoint: tsc ✓ · eslint ✓ · prettier ✓ · vitest ✓ (baseline 1) · fixed 2 · YYYY-MM-DD HH:MM`, with `✗` on each red check and `prettier advisory (2 files)` for an advisory format check that found files, never `✗`. Report the result, the fixes and the baseline failures to `tk-implement`, and return.
+- **`baseline`**: write, or replace, the line under `base:` in `todo.md`: `baseline: clean · YYYY-MM-DD HH:MM`, or `baseline: <n> failing · tsc 0 · eslint 14 · vitest 1 · see <tasks>/baseline.md · YYYY-MM-DD HH:MM`, and then write `<tasks>/baseline.md` with one line per entry: package, check, file, code or rule or test name, message (for a test, the first line of its failure; for a build, the first error; for a command that cannot run, the command and its error), count. Return to `tk-implement`.
 - **`all`**: return the report to `tk-verify`, which records it.
-- **(none)**: write nothing outside the code. Run by the human, end the turn with the report and anything left to fix; called by `tk-implement`, return to it.
+- **(none)**: write nothing outside the code. Run by the human, end the turn with the report and anything left to fix; called by `tk-implement` or `tk-fix-pr`, return to it.
 
 ## Verification
 
 - [ ] Every command traced to config, scripts, or CI; none guessed; nothing installed.
 - [ ] Warnings counted as failures.
+- [ ] (none), `phase` and `slice` linted and format-checked only the files in scope, typechecked incrementally where the command allows, and ran only related tests and `verify:` commands; full suites and the build ran only on `all` and `baseline`.
+- [ ] Every format check ran at its gate: `enforce` gated; `advisory` covered only the change's files, wrote nothing and was never red.
 - [ ] Write modes and fixes touched only files in scope.
 - [ ] No check made green by a suppression comment, a type escape, a weaker test, or a weaker tool config.
 - [ ] Every failure classified new or baseline by §4; no baseline failure fixed or counted red.

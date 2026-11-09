@@ -80,7 +80,7 @@ Once this skill has run in a session, plain keywords continue the flow without r
 | `수정: …` / `revise: …` | Patch the current stage's artifact as asked; wait for approval again |
 | `all` / `slice` | Run `tk-implement` to the end (`all`, the default) or stopping after each slice (`slice`). Either mode stops after a sub-phase that changed the database, and checkpoints every sub-phase and slice. The mode is written to `todo.md`, so `다음` resumes in it |
 | `검증 [peer…]` / `verify [peer…]` | Once every box in `todo.md` is checked: run `tk-verify` as the full stage, with each named peer auditing independently; without names the current agent audits alone |
-| `점검` / `check` | Run `tk-check` on the current change: typecheck, lint and format on the changed files and the tests related to them, fixing what fails; the stage does not change |
+| `점검` / `check` | Run `tk-check` on the current change: lint and format on the changed files, the typecheck of every package they touch, and the tests related to them, fixing what fails; the stage does not change |
 | `리뷰 [stage] [peer…]` / `review …` | Run `tk-multi-review` on the artifact awaiting approval; the artifact stays unapproved |
 | `토론 <Q<n> or sentence>` / `debate …` | Run `tk-multi-debate` on an open decision; the answer still comes from the human via `tk-grill` |
 | `상태` / `status` | Re-derive state from files and report |
